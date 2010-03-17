@@ -2,6 +2,9 @@
 /*
 This is a language file for the WP Shopping Cart plugin version 3.7
 */
+
+define('TXT_WPSC_HIRES_URL_LABEL', 'URL of hi-res image for printing');
+
 define('TXT_WPSC_DELETE_CURRENCY','Delete Currency');
 define('TXT_WPSC_NO_ZIPCODE','Please provide a Zipcode and click Calculate in order to continue.');
 
@@ -181,6 +184,7 @@ define('TXT_WPSC_UPS_DAILY_PICKUP', 'Daily Pickup');
 define('TXT_WPSC_IMPORT_CSV', 'Import Products CSV');
 define('TXT_WPSC_IMPORT_CSV_DESCRIPTION', '<p>You can import your products from a comma delimited text file.</p><p>An example of a cvs import file would look like this: </p><p>Description, Additional Description, Product Name, Price, SKU, weight, weight unit, stock quantity, is limited quantity</p>');
 define('TXT_WPSC_MORE', 'More');
+define('TXT_WPSC_HIRES_URL', 'Hi-res URL');
 
 define('TXT_WPSC_WEIGHT_SETTINGS', 'Weight Settings');
 
@@ -376,6 +380,8 @@ define('TXT_WPSC_PURCHASE_UNAVAILABLE', 'Purchase unavailable options');
 define('TXT_WPSC_WE_RECOMMEND', 'We Recommend');
 define('TXT_WPSC_SELECT_PRODUCT_GROUP', 'Select a Group to Manage');
 define('TXT_WPSC_EDIT_THIS_GROUP', 'Edit This Group');
+
+define('TXT_WPSC_EZPRINTS_PARTNER_ID', 'ezprints Partner ID');
 
 define('TXT_WPSC_USPS_USERID', 'USPS ID');
 define('TXT_WPSC_PRODUCT_ID', 'Product ID');
@@ -745,7 +751,7 @@ define('TXT_WPSC_DISPLAYVARIATIONS', 'Display Variations');
 define('TXT_WPSC_ADDVARIATION', 'Add Variation Set');
 define('TXT_WPSC_EDITVARIATION', 'Edit Variation Set');
 define('TXT_WPSC_VARIATIONHASBEENEDITED', 'The variation has been edited.');
-define('TXT_WPSC_VARIATION_VALUES', 'Variation Values');
+define('TXT_WPSC_VARIATION_VALUES', 'Variation Values, SKU');
 define('TXT_WPSC_REMOVE_SET', 'Remove This Set'); //this needs to be translated
 
 define('TXT_WPSC_SELECT_PARENT', 'Select Parent');

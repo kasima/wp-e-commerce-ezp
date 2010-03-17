@@ -151,7 +151,13 @@ function transaction_results($sessionid, $echo_to_screen = true, $transaction_id
 				$report = get_option('wpsc_email_admin');
 				$report_product_list.= " - ". $product_data['name'] .stripslashes($variation_list)."  ".$message_price ."\n\r";
 			}
-			
+
+        // KTTODO - call out to ezprints here
+        if (($purchase_log['processed'] >= 2) && ($purchase_log['ezprints_order_sent_count'] < 1)) {
+          $ezprints_body = sendEzPrintsOrder($purchase_log['id']);
+          $wpdb->query("UPDATE `".WPSC_TABLE_PURCHASE_LOGS."` SET `ezprints_order_sent_count` = 1 WHERE `id` = ".$purchase_log['id']." LIMIT 1") ;
+        }
+
 				// Decrement the stock here
 				if (($purchase_log['processed'] >= 2)) {
 					wpsc_decrement_claimed_stock($purchase_log['id']);

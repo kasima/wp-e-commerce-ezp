@@ -364,6 +364,11 @@ function update_product_meta($product_id, $key, $value, $prev_value = '') {
 
 
   
+function wpsc_get_country_code($isocode) {
+  global $wpdb;
+  $code = $wpdb->get_var("SELECT `code` FROM `".WPSC_TABLE_CURRENCY_LIST."` WHERE `isocode` IN ('".$isocode."') LIMIT 1");
+  return $code; 
+}
 
  function wpsc_get_country($country_code) {
   global $wpdb;

@@ -1,11 +1,11 @@
 <?php
 /*
 Plugin Name:WP Shopping Cart
-Plugin URI: http://www.instinct.co.nz
-Description: A plugin that provides a WordPress Shopping Cart. Contact <a href='http://www.instinct.co.nz/?p=16#support'>Instinct Entertainment</a> for support.
-Version: 3.7.5.3
-Author: Instinct Entertainment
-Author URI: http://www.instinct.co.nz/e-commerce/
+Plugin URI: http://github.com/kasima
+Description: A plugin that provides a WordPress Shopping Cart, modified for ezprints.com integration.  Original plugin at <a href="http://www.instinct.co.nz/">http://www.instinct.co.nz/</a>.
+Version: 3.7.5.3-ezp-0.1
+Author: Kasima Tharnpipitchai
+Author URI: http://github.com/kasima
 */
 /**
  * WP eCommerce Main Plugin File
@@ -97,6 +97,10 @@ define('WPSC_TABLE_CATEGORISATION_GROUPS', "{$wp_table_prefix}wpsc_categorisatio
 define('WPSC_TABLE_VARIATION_COMBINATIONS', "{$wp_table_prefix}wpsc_variation_combinations");
 define('WPSC_TABLE_CLAIMED_STOCK', "{$wp_table_prefix}wpsc_claimed_stock");
 
+
+// ezprints integration
+require_once(WPSC_FILE_PATH."/wpsc-includes/ezprints.functions.php");
+require_once(WPSC_FILE_PATH."/wpsc-includes/3166.php");
 
 // start including the rest of the plugin here
 require_once(WPSC_FILE_PATH.'/wpsc-includes/wpsc_query.php');

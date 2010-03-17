@@ -70,6 +70,7 @@ function wpsc_display_product_form ($product_id = 0) {
 		$product_data['meta']['external_link'] = get_product_meta($product_id,'external_link',true);
 		$product_data['meta']['merchant_notes'] = get_product_meta($product_id,'merchant_notes',true);
 		$product_data['meta']['sku'] = get_product_meta($product_id,'sku',true);
+		$product_data['meta']['hires_url'] = get_product_meta($product_id,'hires_url',true);
 		
 		$product_data['meta']['engrave'] = get_product_meta($product_id,'engraved',true);
 		$product_data['meta']['can_have_uploaded_image'] = get_product_meta($product_id,'can_have_uploaded_image',true);
@@ -170,7 +171,12 @@ function wpsc_product_basic_details_form(&$product_data) {
 					<div style='clear:both; height: 0px; margin-bottom: 15px;'></div>	
 				</td>
 			</tr>
-		
+		    <tr>
+		    <td>
+			<?php echo TXT_WPSC_HIRES_URL_LABEL; ?> :<br />
+			<input size='70' type='text' class='text'  name='productmeta_values[hires_url]' value='<?php echo htmlentities(stripslashes($product_data['meta']['hires_url']), ENT_QUOTES, 'UTF-8'); ?>' />
+		    </td>
+		    </tr>
 		
 			<tr>
 				<td colspan='3' class='skuandprice'>

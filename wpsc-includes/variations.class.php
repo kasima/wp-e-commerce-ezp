@@ -218,6 +218,7 @@ class nzshpcrt_variations {
       $output .= "    <th class='titles stock' $stock_column_state >".TXT_WPSC_STOCK."</th>\n\r";
       $output .= "    <th class='titles price'>".TXT_WPSC_PRICE."</th>\n\r";
       //$output .= "    <th class='titles weight'>".TXT_WPSC_WEIGHT."</th>\n\r";
+      $output .= "    <th class='titles'>".TXT_WPSC_HIRES_URL."&nbsp;</th>\n\r";
       $output .= "    <th class='titles'>".TXT_WPSC_MORE."&nbsp;</th>\n\r";
       $output .= "  </tr>\n\r";
       
@@ -283,7 +284,7 @@ class nzshpcrt_variations {
 		}
     $priceandstock_id_string = implode(", ", $priceandstock_ids);
 		if(count($priceandstock_ids)) {
-			$unindexed_variation_properties_data = $wpdb->get_results("SELECT `id`, `stock`, `price`, `weight`,`weight_unit`, `file` FROM `".WPSC_TABLE_VARIATION_PROPERTIES."` WHERE `id` IN({$priceandstock_id_string})", ARRAY_A);
+			$unindexed_variation_properties_data = $wpdb->get_results("SELECT `id`, `stock`, `price`, `weight`,`weight_unit`, `file`, `hires_url` FROM `".WPSC_TABLE_VARIATION_PROPERTIES."` WHERE `id` IN({$priceandstock_id_string})", ARRAY_A);
 		}
 
 		// Index the variation properties data according to the price and stock ID.
@@ -321,12 +322,15 @@ class nzshpcrt_variations {
 					$product_weight = $variation_properties_data[$variation_set['priceandstock_id']]['weight'];
 					$product_weight_unit = $variation_properties_data[$variation_set['priceandstock_id']]['weight_unit'];
 					$product_file_id = $variation_properties_data[$variation_set['priceandstock_id']]['file'];
+					$product_hires_url = $variation_properties_data[$variation_set['priceandstock_id']]['hires_url'];
+					
 				} else {
 					$product_price = $product_data['price'];
 					$product_stock = $product_data['quantity'];
 					$product_weight = $product_data['weight'];
 					$product_weight_unit = $product_data['weight_unit'];
 					$product_file_id = $product_data['file'];
+					$product_hires_url = '';
 				}
 				
 				
@@ -335,6 +339,7 @@ class nzshpcrt_variations {
 				$output .= "    <td class='stock' $stock_column_state><input type='text' name='variation_priceandstock[{$variation_ids}][stock]' value='$product_stock' size='3' /></td>\n\r";
 				$output .= "    <td class='price'><input type='text' name='variation_priceandstock[{$variation_ids}][price]' value='$product_price' size='6' /></td>\n\r";
 	//       $output .= "    <td class='weight'><input type='text' name='variation_priceandstock[{$variation_ids}][weight]' value='' size='3' /></td>\n\r";
+				$output .= "    <td class='hires_url'><input type='text' name='variation_priceandstock[{$variation_ids}][hires_url]' value='$product_hires_url' size='15' /></td>\n\r";
 				
 				$output .= "    <td>\n\r";
 				$output .= "      <a href='#' class='variation_edit_button' onclick='return open_variation_settings(\"variation_settings_$variation_settings_uniqueid\")' ><img src='".WPSC_URL."/images/gear__plus.png' alt='".TXT_WPSC_EDIT."' title='".TXT_WPSC_EDIT."'></a>\n\r";
@@ -612,6 +617,7 @@ class nzshpcrt_variations {
       $variation_weight_unit = (string)$variation_data['weight_unit'];		
       $variation_file =(int)$variation_data['file'];		
       $variation_visibility =(int)(bool)$variation_data['visibility'];
+      $variation_hires_url = (string)$variation_data['hires_url'];
       
       
       if((is_numeric($variation_data['stock']) || is_numeric($variation_price))) {
@@ -649,13 +655,18 @@ class nzshpcrt_variations {
           if(($variation_stock_data['file'] != $variation_file)) {
             $variation_sql[] = "`file` = '{$variation_file}'";
           }
+          
+          if(($variation_stock_data['hires_url'] != $variation_hires_url)) {
+            $variation_sql[] = "`hires_url` = '{$variation_hires_url}'";
+          }
+          
           // if there is any SQL to execute, make it so
           if($variation_sql != null) { 
             $wpdb->query("UPDATE `".WPSC_TABLE_VARIATION_PROPERTIES."` SET ".implode(",",$variation_sql)."WHERE `id` = '{$variation_stock_data['id']}' LIMIT 1 ;");
           }
         }	else {
           // otherwise, the price and stock row does not exist, make it
-          $wpdb->query("INSERT INTO `".WPSC_TABLE_VARIATION_PROPERTIES."` ( `product_id` , `stock`, `price`, `weight`, `weight_unit`, `file` ) VALUES ('{$product_id}', '{$variation_stock}', '{$variation_price}', '{$variation_weight}', '{$variation_weight_unit}', '{$variation_file}');");
+          $wpdb->query("INSERT INTO `".WPSC_TABLE_VARIATION_PROPERTIES."` ( `product_id` , `stock`, `price`, `weight`, `weight_unit`, `file`, `hires_url` ) VALUES ('{$product_id}', '{$variation_stock}', '{$variation_price}', '{$variation_weight}', '{$variation_weight_unit}', '{$variation_file}', '{$variation_hires_url}');");
           $variation_priceandstock_id = $wpdb->get_var("SELECT LAST_INSERT_ID() FROM `".WPSC_TABLE_VARIATION_PROPERTIES."` LIMIT 1");
           foreach($keys as $key) {
             // then make sure it is associated with the product and variations.

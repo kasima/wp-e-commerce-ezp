@@ -172,6 +172,7 @@ function wpsc_admin_variation_forms($variation_id =  null) {
 								?>
 								<div class='variation_value'>
 								<input type='text' class='text' name='variation_values[<?php echo $variation_value['id']; ?>]' value='<?php echo htmlentities(stripslashes($variation_value['name']), ENT_QUOTES, 'UTF-8'); ?>' />
+							    <input type='text' class='text' name='variation_values_sku[<?php echo $variation_value['id']; ?>]' value='<?php echo htmlentities(stripslashes($variation_value['sku']), ENT_QUOTES, 'UTF-8'); ?>' />
 								<input type='hidden' class='variation_values_id' name='variation_values_id[]' value='<?php echo $variation_value['id']; ?>' />
 								<?php if($variation_value_count > 1): ?>
 									<a class='image_link delete_variation_value' href='#'>
@@ -187,6 +188,7 @@ function wpsc_admin_variation_forms($variation_id =  null) {
 								?>
 								<div class='variation_value'>
 									<input type='text' class="text" name='new_variation_values[]' value='' />
+									<input type='text' class="text" name='new_variation_values_sku[]' value='' />
 										<a class='image_link delete_variation_value' href='#'>
 											<img src='<?php echo WPSC_URL; ?>/images/trash.gif' alt='<?php echo TXT_WPSC_DELETE; ?>' title='<?php echo TXT_WPSC_DELETE; ?>' />
 										</a>

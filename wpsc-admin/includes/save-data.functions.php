@@ -36,13 +36,14 @@ function wpsc_save_variation_set() {
       $variation_id = $wpdb->get_results("SELECT LAST_INSERT_ID() AS `id` FROM `".WPSC_TABLE_PRODUCT_VARIATIONS."` LIMIT 1",ARRAY_A);
       $variation_id = $variation_id[0]['id'];
       $variation_values = $_POST['new_variation_values'];
+      $variation_values_sku = $_POST['new_variation_values_sku'];
       $num = 0;
       $variation_value_sql_items = array();
       foreach($variation_values as $variation_value) {
-        $variation_value_sql_items[] = " ( '".$wpdb->escape(trim($variation_value))."', '".$variation_id."')";
+        $variation_value_sql_items[] = " ( '".$wpdb->escape(trim($variation_value))."', '".$wpdb->escape(trim($variation_values_sku[$num]))."', '".$variation_id."')";
         $num++;
 			}
-      $wpdb->query("INSERT INTO `".WPSC_TABLE_VARIATION_VALUES."` ( `name` , `variation_id` )  VALUES ".implode(", ", $variation_value_sql_items));
+      $wpdb->query("INSERT INTO `".WPSC_TABLE_VARIATION_VALUES."` ( `name` , `sku`, `variation_id` )  VALUES ".implode(", ", $variation_value_sql_items));
       
       //echo "<div class='updated'><p align='center'>".TXT_WPSC_ITEMHASBEENADDED."</p></div>";
 		} else {
@@ -58,12 +59,9 @@ function wpsc_save_variation_set() {
     $variation_id = absint($_POST['variation_id']);
     foreach($_POST['variation_values'] as $variation_value_id => $variation_value) {
       if(is_numeric($variation_value_id)) {
-        $variation_value_state = $wpdb->get_results("SELECT `name` FROM `".WPSC_TABLE_VARIATION_VALUES."` WHERE `id` = '$variation_value_id' AND `variation_id` = '$variation_id' LIMIT 1",ARRAY_A);
-        $variation_value_state = $variation_value_state[0]['name'];
-			}
-        
-      if($variation_value_state != $variation_value) {
-        $wpdb->query("UPDATE `".WPSC_TABLE_VARIATION_VALUES."` SET `name` = '".$wpdb->escape($variation_value)."' WHERE `id` = '$variation_value_id' AND `variation_id` = '".$variation_id."' LIMIT 1;");
+        $variation_value_sku = $_POST['variation_values_sku'][$variation_value_id];
+        // Why check if it's changed?  Just update, dammit.
+        $wpdb->query("UPDATE `".WPSC_TABLE_VARIATION_VALUES."` SET `name` = '".$wpdb->escape($variation_value)."', `sku` = '".$wpdb->escape($variation_value_sku)."' WHERE `id` = '$variation_value_id' AND `variation_id` = '".$variation_id."' LIMIT 1;");
 			}
 		}
     
@@ -72,10 +70,10 @@ function wpsc_save_variation_set() {
       $num = 0;
       $variation_value_sql_items = array();
       foreach($_POST['new_variation_values'] as $variation_value) {
-        $variation_value_sql_items[] = "('".$wpdb->escape(trim($variation_value))."', '".$variation_id."')";
+        $variation_value_sql_items[] = "('".$wpdb->escape(trim($variation_value))."', '".$wpdb->escape(trim($_POST['new_variation_values_sku'][$num]))."', '".$variation_id."')";
         $num++;
 			}
-      $wpdb->query("INSERT INTO `".WPSC_TABLE_VARIATION_VALUES."` ( `name` , `variation_id` )  VALUES ".implode(", ", $variation_value_sql_items));
+      $wpdb->query("INSERT INTO `".WPSC_TABLE_VARIATION_VALUES."` ( `name` , `sku`, `variation_id` )  VALUES ".implode(", ", $variation_value_sql_items));
 		}
     
     $updatesql = "UPDATE `".WPSC_TABLE_PRODUCT_VARIATIONS."` SET `name` = '".$wpdb->escape($_POST['name'])."' WHERE `id`='".$variation_id."' LIMIT 1";
