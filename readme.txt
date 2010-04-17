@@ -29,6 +29,8 @@ To upgrade from a previous wp-e-commerce version, replace your current wp-e-comm
 Setup
 =====
 
+In the WP admin screen, under Products > Settings > Shipping, enter your ezprints Partner ID by clicking 'edit' next to the ezprints External Shipping Calculator.
+
 Variations
 Each variation is an ezprints product.  Create variation sets with all the ezprints skus you'd like to offer.
 
