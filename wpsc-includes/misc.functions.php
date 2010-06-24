@@ -7,8 +7,8 @@
  * @package wp-e-commerce
  * @since 3.7
  */
-
-
+ 
+ 
 /**
  * WPSC get state by id function, gets either state code or state name depending on param
  *
@@ -18,10 +18,13 @@
  */
 function wpsc_get_state_by_id($id, $return_value){
 	global $wpdb;
-	$value = $wpdb->get_var("SELECT `".$return_value."` FROM `".WPSC_TABLE_REGION_TAX."` WHERE `id` IN('".absint($id)."') LIMIT 1");
+	
+	$sql = "SELECT `".$return_value."` FROM `".WPSC_TABLE_REGION_TAX."` WHERE `id`=".$id;
+	$value = $wpdb->get_var($sql);
 	return $value;
 }
- 
+
+
 /**
  * WPSC add new user function, validates and adds a new user, for the 
  *
@@ -75,7 +78,6 @@ function wpsc_get_state_by_id($id, $return_value){
 
 
 
-
 /**
  * WPSC product has variations function
  * @since 3.7
@@ -118,26 +120,67 @@ add_filter('single_post_title','wpsc_post_title_seo');
  * @return bool true or false
  */
 function wpsc_change_canonical_url($url) {
-  global $wpdb, $wpsc_query;
-  if($wpsc_query->is_single == true) {
-  if(!is_numeric($_GET['product_id'])) {
-		$product_id = $wpdb->get_var("SELECT `product_id` FROM `".WPSC_TABLE_PRODUCTMETA."` WHERE `meta_key` IN ( 'url_name' ) AND `meta_value` IN ( '".$wpsc_query->query_vars['product_url_name']."' ) ORDER BY `product_id` DESC LIMIT 1");
-  } else {
-  	$product_id = absint($_GET['product_id']);
-	}
-	
-	$url = wpsc_product_url($product_id);
-  } else {
-    if($wpsc_query->query_vars['category_id'] > 0) {
-      $url = wpsc_category_url($wpsc_query->query_vars['category_id']);
-			if(get_option('permalink_structure') && ($wpsc_query->query_vars['page'] > 1)) {
-				$url .= $url."page/{$wpsc_query->query_vars['page']}/";
-			}
-    }
+  global $wpdb, $wpsc_query, $post;
+
+  // Only change the URL is we're viewing a WP e-Commerce page
+  if(stristr($post->post_content,'[productspage]')) {
+
+        if (isset($wpsc_query->query_vars['product_url_name'])) {
+                $product_url_name = $wpsc_query->query_vars['product_url_name'];
+        } else {
+                $product_url_name = '';
+        }
+
+        // Viewing a single product page
+        if ($product_url_name != '') {
+                if(!is_numeric($_GET['product_id'])) {
+                        $product_id = $wpdb->get_var($wpdb->prepare("SELECT product_id FROM ".WPSC_TABLE_PRODUCTMETA." WHERE meta_key = 'url_name'  AND meta_value = %s ORDER BY product_id DESC LIMIT 1", $product_url_name));
+                } else {
+                        $product_id = absint($_GET['product_id']);
+                }
+                if($product_id > 0){
+                        $url = wpsc_product_url($product_id);
+                }else{
+                        $url = get_option('product_list_url');
+                }
+
+        // Viewing a category page
+        } elseif (absint($wpsc_query->query_vars['category_id']) > 0) {
+                $url = wpsc_category_url(absint($wpsc_query->query_vars['category_id']));
+
+                if ( $wpsc_query->query_vars['page'] > 1 ) {
+                        if ( get_option( 'permalink_structure' ) ) {
+                                $url .= "page/{$wpsc_query->query_vars['page']}/";
+                        } else {
+                                $url .= "&page_number={$wpsc_query->query_vars['page']}";
+                                $url = html_entity_decode( $url );
+                        }
+                }
+        }
   }
   return $url;
 }
 add_filter('aioseop_canonical_url', 'wpsc_change_canonical_url');
+
+
+
+function wpsc_insert_canonical_url() {
+	$wpsc_url = wpsc_change_canonical_url(null);
+//	exit($wpsc_url);
+	echo "<link rel='canonical' href='$wpsc_url' />\n";
+}
+
+function wpsc_canonical_url() {
+	$wpsc_url = wpsc_change_canonical_url(null);
+	if(($wpsc_url != null) && ((count($aioseop_options) <= 1) || (($aioseop_options['aiosp_can'] != '1' && $aioseop_options['aiosp_can'] != 'on'))) ) {
+		remove_action( 'wp_head', 'rel_canonical' );
+		add_action( 'wp_head', 'wpsc_insert_canonical_url');
+	}
+}
+add_action( 'template_redirect', 'wpsc_canonical_url' );
+
+
+
 
 
 // check for all in one SEO pack and the is_static_front_page function
@@ -193,26 +236,6 @@ function wpsc_set_aioseop_keywords($data) {
   return $data;
 }
 add_filter('aioseop_keywords', 'wpsc_set_aioseop_keywords');
-
-
-
-
-
-function wpsc_insert_canonical_url() {
-	$wpsc_url = wpsc_change_canonical_url(null);
-	echo "<link rel='canonical' href='$wpsc_url' />\n";
-}
-
-function wpsc_canonical_url() {
-	global $aioseop_options;
-	$wpsc_url = wpsc_change_canonical_url(null);
-	if(($wpsc_url != null) && ((count($aioseop_options) <= 1) || (($aioseop_options['aiosp_can'] != '1' && $aioseop_options['aiosp_can'] != 'on'))) ) {
-		remove_action( 'wp_head', 'rel_canonical' );
-		add_action( 'wp_head', 'wpsc_insert_canonical_url');
-	}
-}
-add_action( 'template_redirect', 'wpsc_canonical_url' );
-
 
 
 
@@ -400,8 +423,18 @@ function nzshpcrt_display_preview_image() {
 				}
 			} else if($_GET['image_id']) {
 				$image_id = (int)$_GET['image_id'];
-				$image = $wpdb->get_var("SELECT `image` FROM `".WPSC_TABLE_PRODUCT_IMAGES."` WHERE `id` = '{$image_id}' LIMIT 1");
-				$imagepath = WPSC_IMAGE_DIR . $image;
+				$results = $wpdb->get_row("SELECT `image`,`product_id` FROM `".WPSC_TABLE_PRODUCT_IMAGES."` WHERE `id` = '{$image_id}' LIMIT 1");
+				$image = $results->image;
+				$pid = $results->product_id;
+				$thumbnail_info = $wpdb->get_row("SELECT `thumbnail_state`,`image` FROM `".WPSC_TABLE_PRODUCT_LIST."` WHERE `id` = '{$pid}' LIMIT 1");
+				$thumbnail_state = $thumbnail_info->thumbnail_state;
+				$thumbnail_image = $thumbnail_info->image;
+				if (($thumbnail_state == 3) && ($image_id == $thumbnail_image)) {
+					$imagepath = WPSC_THUMBNAIL_DIR . $image;
+				} else {
+					$imagepath = WPSC_IMAGE_DIR . $image;
+				}
+
 			} else if( $_GET['image_name']) {
 				$image = basename($_GET['image_name']);
 				$imagepath = WPSC_USER_UPLOADS_DIR . $image;
@@ -603,11 +636,7 @@ function nzshpcrt_display_preview_image() {
 						default:
 						$pass_imgtype = false;
 						break;
-					}/*
-					header("Content-type: image/png");
-					ImagePNG($dst_img);
-					ImagePNG($dst_img, WPSC_CACHE_DIR.$cache_filename.".png");
-					@ chmod( WPSC_CACHE_DIR.$cache_filename.".png", 0775 );*/
+					}
 					exit();
 				}
 			}
@@ -617,11 +646,9 @@ function nzshpcrt_display_preview_image() {
 
 add_action('init', 'nzshpcrt_display_preview_image');
 
-
-function wpsc_fix_permissions($filename) {
-	$stat = stat( dirname( $filename ));
-	$perms = $stat['mode'] & 0000775;
-	@ chmod( $filename, $perms );
+//function added to preserve backwards compatibility
+function nzshpcrt_listdir($dirname){
+	return wpsc_list_dir($dirname);
 }
 
 function wpsc_list_dir($dirname) {
@@ -693,34 +720,82 @@ function wpsc_replace_reply_name($input) {
 }
 
 /**
- * wpsc_clean_categories function,
- * Replace the email address for the purchase receipts
+* wpsc_object_to_array, recusively converts an object to an array, for usage with SOAP code
+
+* Copied from here, then modified:
+* http://www.phpro.org/examples/Convert-Object-To-Array-With-PHP.html
+
 */
-function wpsc_clean_categories() {
-	global $wpdb, $wp_rewrite;
-  $sql_query = "SELECT `id`, `name`, `active` FROM `".WPSC_TABLE_PRODUCT_CATEGORIES."`";
-	$sql_data = $wpdb->get_results($sql_query, ARRAY_A);
-	$updated = false;
-	foreach((array)$sql_data as $datarow) {
-	  if($datarow['active'] == 1) {
-	    $tidied_name = trim($datarow['name']);
-			$tidied_name = strtolower($tidied_name);
-			$url_name = sanitize_title($tidied_name);            
-			$similar_names = $wpdb->get_row("SELECT COUNT(*) AS `count`, MAX(REPLACE(`nice-name`, '$url_name', '')) AS `max_number` FROM `".WPSC_TABLE_PRODUCT_CATEGORIES."` WHERE `nice-name` REGEXP '^($url_name){1}(\d)*$' AND `id` NOT IN ('{$datarow['id']}') ", ARRAY_A);
-			$extension_number = '';
-			if($similar_names['count'] > 0) {
-				$extension_number = (int)$similar_names['max_number']+2;
-			}
-			$url_name .= $extension_number;
-			$wpdb->query("UPDATE `".WPSC_TABLE_PRODUCT_CATEGORIES."` SET `nice-name` = '$url_name' WHERE `id` = '{$datarow['id']}' LIMIT 1 ;");
-			$updated = true;
-	  } else if($datarow['active'] == 0) {
-		  $wpdb->query("UPDATE `".WPSC_TABLE_PRODUCT_CATEGORIES."` SET `nice-name` = '' WHERE `id` = '{$datarow['id']}' LIMIT 1 ;");
-		  $updated = true;
-	  }
-	}
-	$wp_rewrite->flush_rules();
-	return $updated;
+
+function wpsc_object_to_array( $object ) {
+		if( !is_object( $object ) && !is_array( $object ) ) {
+				return $object;
+		} else if( is_object( $object ) )	{
+				$object = get_object_vars( $object );
+		}
+		return array_map( 'wpsc_object_to_array', $object );
 }
 
+
+function wpsc_readfile_chunked($filename, $retbytes = true) {
+	$chunksize = 1 * (1024 * 1024); // how many bytes per chunk
+	$buffer = '';
+	$cnt = 0;
+	$handle = fopen($filename, 'rb');
+	if($handle === false) {
+		return false;
+	}
+	while (!feof($handle)) {
+		$buffer = fread($handle, $chunksize);
+		echo $buffer;
+		ob_flush();
+		flush();
+		if($retbytes)	{
+			$cnt += strlen($buffer);
+		}
+	}
+	$status = fclose($handle);
+	if($retbytes && $status) {
+		return $cnt; // return num. bytes delivered like readfile() does.
+	}
+	return $status;
+}
+
+/**
+* wpsc_clear_stock_claims, clears the stock claims, runs using wp-cron
+*/
+
+function wpsc_clear_stock_claims( ) {
+	global $wpdb;
+	///wp_mail('thomas.howard@gmail.com', 'test hourly cron', 'wpsc_clear_stock_claims ran');
+	/// Delete the old claims on stock
+	$old_claimed_stock_timestamp = mktime((date('H') - 1), date('i'), date('s'), date('m'), date('d'), date('Y'));
+	$old_claimed_stock_datetime = date("Y-m-d H:i:s", $old_claimed_stock_timestamp);
+	$wpdb->query("DELETE FROM `".WPSC_TABLE_CLAIMED_STOCK."` WHERE `last_activity` < '{$old_claimed_stock_datetime}' AND `cart_submitted` IN ('0')");
+}
+add_action('wpsc_daily_cron_tasks', 'wpsc_clear_stock_claims');
+
+/**
+ * Description Check PHP version to Compare
+ * @access public
+ *
+ * @param string of version to compare
+ * @return boolean true or false
+ */
+function phpMinV($v)
+{
+    $phpV = PHP_VERSION;
+
+    if ($phpV[0] >= $v[0]) {
+        if (empty($v[2]) || $v[2] == '*') {
+            return true;
+        } elseif ($phpV[2] >= $v[2]) {
+            if (empty($v[4]) || $v[4] == '*' || $phpV[4] >= $v[4]) {
+                return true;
+            }
+        }
+    }
+
+    return false;
+}
 ?>

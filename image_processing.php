@@ -100,11 +100,12 @@ global $wpdb;
 			// Final thumbnail cropped from the center out.
 			//ImageCopyResampled( $dst_img, $temp_img, 0, 0, $w1, $h1, $width, $height, $width, $height );
 			ImageCopy( $dst_img, $temp_img, $w1, $h1, 0, 0, $temp_w, $temp_h );
-			//mail('thomas.howard@gmail.com','lolwut',"ImageCopy( $dst_img, $temp_img, $w1, $h1, 0, 0, $temp_w, $temp_h );");
+			
+			$image_quality = wpsc_image_quality();
 			
 			switch($imagetype[2]) {
 				case IMAGETYPE_JPEG:
-				if(@ ImageJPEG($dst_img, $image_output, 75) == false) { return false; }
+				if(@ ImageJPEG($dst_img, $image_output, $image_quality) == false) { return false; }
 				break;
 	
 				case IMAGETYPE_GIF:
@@ -138,4 +139,31 @@ global $wpdb;
 	}
 	return false;
 }
+
+
+
+/**
+ * WPSC Image Quality
+ *
+ * Returns the value to use for image quality when creating jpeg images.
+ * By default the quality is set to 75%. It is then run through the main jpeg_quality WordPress filter
+ * to add compatibility with other plugins that customise image quality.
+ *
+ * It is then run through the wpsc_jpeg_quality filter so that it is possible to override
+ * the quality setting just for WPSC images.
+ *
+ * @since 3.7.6
+ *
+ * @param (int) $quality Optional. Image quality when creating jpeg images.
+ * @return (int) The image quality.
+ */
+function wpsc_image_quality( $quality = 75 ) {
+	
+	$quality = apply_filters( 'jpeg_quality', $quality );
+	return apply_filters( 'wpsc_jpeg_quality', $quality );
+	
+}
+
+
+
 ?>

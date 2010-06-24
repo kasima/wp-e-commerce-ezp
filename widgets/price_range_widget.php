@@ -3,7 +3,7 @@ function widget_price_range($args) {
 	global $wpdb, $table_prefix;
 	extract($args);
   $options = get_option('wpsc-widget_price_range');    
-	$title = empty($options['title']) ? __(TXT_WPSC_PRICE_RANGE) : $options['title'];
+	$title = empty($options['title']) ? __(__('Price Range', 'wpsc')) : $options['title'];
 	echo $before_widget."";
 	$full_title = $before_title . $title . $after_title;
 	echo $full_title."";
@@ -39,11 +39,11 @@ function nzshpcrt_price_range($input = null) {
 			$j=$i;
 			
 			if ($i==$final_count-1) {
-				echo "<a href='".htmlentities($product_page.$seperater."range=".$j)."'>Over ".$ranges[$i]."</a><br/>";
+				echo "<a href='".htmlentities($product_page.$seperater."range=".$j)."'>Over ".nzshpcrt_currency_display($ranges[$i],1,true)."</a><br/>";
 			} else if($ranges[$i]==0){ 
-				echo "<a href='".htmlentities($product_page.$seperater."range=".$j)."'>Under ".$ranges[$i+1]."</a><br/>";
+				echo "<a href='".htmlentities($product_page.$seperater."range=".$j)."'>Under ".nzshpcrt_currency_display($ranges[$i+1],1,true)."</a><br/>";
 			}else {
-				echo "<a href='".htmlentities($product_page.$seperater."range=".$j)."'>".$ranges[$i]." - ".$ranges[$i+1]."</a><br/>";
+				echo "<a href='".htmlentities($product_page.$seperater."range=".$j)."'>".nzshpcrt_currency_display($ranges[$i],1,true)." - ".nzshpcrt_currency_display($ranges[$i+1],1,true)."</a><br/>";
 			}
 		}
     	if(get_option('permalink_structure') != '') {
@@ -51,7 +51,7 @@ function nzshpcrt_price_range($input = null) {
 		} else {
 			$seperator ="&amp;";
 		}
-		echo "<a href='".get_option("product_list_url").$seperator."range=all'>".TXT_WPSC_SHOWALL."</a><br/>";
+		echo "<a href='".get_option("product_list_url").$seperator."range=all'>".__('Show All', 'wpsc')."</a><br/>";
 	}
 }
 
@@ -74,8 +74,8 @@ function widget_price_range_control() {
 
 function widget_price_range_init() {
 	if(function_exists('register_sidebar_widget')) {
-		register_sidebar_widget(TXT_WPSC_PRICE_RANGE, 'widget_price_range');
-		register_widget_control(TXT_WPSC_PRICE_RANGE, 'widget_price_range_control');
+		register_sidebar_widget(__('Price Range', 'wpsc'), 'widget_price_range');
+		register_widget_control(__('Price Range', 'wpsc'), 'widget_price_range_control');
 	}
 	return;
 }

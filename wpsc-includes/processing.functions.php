@@ -14,9 +14,40 @@ function wpsc_decrement_claimed_stock($purchase_log_id) {
 	  // If this is ever wrong, and you get negative stock, do not fix it here, go find the real cause of the problem 
 		if($claimed_stock['variation_stock_id'] > 0) {
 			$wpdb->query($wpdb->prepare("UPDATE `".WPSC_TABLE_VARIATION_PROPERTIES."` SET `stock` = (`stock` - %s)  WHERE `id` = '%d' LIMIT 1", $claimed_stock['stock_claimed'], $claimed_stock['variation_stock_id']));
-		} else {
+		$sql_query = "SELECT * FROM `".WPSC_TABLE_VARIATION_PROPERTIES."` WHERE `id` = '" . $claimed_stock['variation_stock_id'] . "'";
+			$remaining_stock = $wpdb->get_row($sql_query, ARRAY_A);
+			$sql_query1 = "SELECT * FROM `".WPSC_TABLE_PRODUCT_LIST."` WHERE `id` = '" . $remaining_stock['product_id'] . "'";
+			$product_data = $wpdb->get_row($sql_query1, ARRAY_A);
+			if($product_data["quantity_limited"] == 1 && $remaining_stock["stock"]==0 && get_product_meta($product_data['id'],'unpublish_oos',true) == 1){
+				$sql_query = "SELECT * FROM `".WPSC_TABLE_VARIATION_PROPERTIES."` WHERE product_id='" . $product_data['id'] . "'";
+				$variation_data = $wpdb->get_results($sql_query, ARRAY_A);
+				$real_stock = 0;
+				foreach ((array)$variation_data as $possible_stock){
+					$real_stock += $possible_stock["stock"] * $possible_stock["visibility"];
+				}
+				if ($real_stock == 0)
+				{
+					wp_mail(get_option('admin_email'), $product_data["name"] . __(' is out of stock', 'wpsc'), __('Remaining stock of ', 'wpsc') . $product_data["name"] . __(' and its variations is 0. Product was unpublished.', 'wpsc'));
+					$wpdb->query($wpdb->prepare("UPDATE `".WPSC_TABLE_PRODUCT_LIST."` SET `publish` = '0'  WHERE `id` = '%d' LIMIT 1", $product_data['id']));
+				}
+				else{
+				$sql_query2 = "SELECT `".WPSC_TABLE_VARIATION_VALUES."`.`name`, `".WPSC_TABLE_VARIATION_COMBINATIONS."`.`value_id` FROM `".WPSC_TABLE_VARIATION_COMBINATIONS."` INNER JOIN `".WPSC_TABLE_VARIATION_VALUES."` ON `".WPSC_TABLE_VARIATION_COMBINATIONS."`.`value_id`=`".WPSC_TABLE_VARIATION_VALUES."`.`id` WHERE `".WPSC_TABLE_VARIATION_COMBINATIONS."`.`priceandstock_id` = '" . $remaining_stock['id'] . "'";
+				$variation_data = $wpdb->get_row($sql_query2, ARRAY_A);
+				wp_mail(get_option('admin_email'), $product_data["name"] . " " . $variation_data["name"] . __(' is out of stock', 'wpsc'), __('Remaining stock of ', 'wpsc') . $product_data["name"] . " " . $variation_data["name"] . __(' is 0. Product variation was set to invisible.', 'wpsc'));
+				$wpdb->query($wpdb->prepare("UPDATE `".WPSC_TABLE_VARIATION_VALUES_ASSOC."` SET `visible` = '0'  WHERE `value_id` = '%d' AND `product_id` = '%d' LIMIT 1", $variation_data['value_id'], $product_data["id"]));
+				}
+			}
+		} 
+		else {
 			$wpdb->query($wpdb->prepare("UPDATE `".WPSC_TABLE_PRODUCT_LIST."` SET `quantity` = (`quantity` - %s)  WHERE `id` = '%d' LIMIT 1", $claimed_stock['stock_claimed'], $claimed_stock['product_id']));
+			$sql_query = "SELECT * FROM `".WPSC_TABLE_PRODUCT_LIST."` WHERE `id` = '" . $claimed_stock['product_id'] . "'";
+			$remaining_stock = $wpdb->get_row($sql_query, ARRAY_A);
+			if($remaining_stock["quantity_limited"] == 1 && $remaining_stock["quantity"]==0 && get_product_meta($claimed_stock['product_id'],'unpublish_oos',true) == 1){
+				wp_mail(get_option('admin_email'), $remaining_stock["name"] . __(' is out of stock', 'wpsc'), __('Remaining stock of ', 'wpsc') . $remaining_stock["name"] . __(' is 0. Product was unpublished.', 'wpsc'));
+				$wpdb->query($wpdb->prepare("UPDATE `".WPSC_TABLE_PRODUCT_LIST."` SET `publish` = '0'  WHERE `id` = '%d' LIMIT 1", $claimed_stock['product_id']));}
+			
 		}
+
 	}
 	$wpdb->query($wpdb->prepare("DELETE FROM `".WPSC_TABLE_CLAIMED_STOCK."` WHERE `cart_id` IN ('%s')", $purchase_log_id));
 }
@@ -271,7 +302,7 @@ function calculate_product_price($product_id, $variations = false, $no_special=f
 	} else {
 		$price = false;
 	}
-			
+  $price = apply_filters('wpsc_do_convert_price', $price);
   return $price;
 }
   
@@ -882,7 +913,7 @@ function wpsc_check_stock($state, $product) {
 	}
 		if($out_of_stock === true) {
 			$state['state'] = true;
-			$state['messages'][] = TXT_WPSC_OUT_OF_STOCK_ERROR_MESSAGE;
+			$state['messages'][] = __('This product has no available stock', 'wpsc');
 		}
 	
 	return array('state' => $state['state'], 'messages' => $state['messages']);
@@ -898,7 +929,10 @@ function wpsc_check_weight($state, $product) {
 	$custom_shipping = (array)get_option('custom_shipping_options');
 	$has_no_weight = false;
 	// only do anything if UPS is on and shipping is used
-	if((array_search('ups', $custom_shipping) !== false) && ($product['no_shipping'] != 1)) {
+	$weightRelatedShippingModules = array('ups','usps','weightrate');
+
+	if((array_intersect($weightRelatedShippingModules, $custom_shipping))&& ($product['no_shipping'] != 1)) {
+	//	exit('true?');
 		$excluded_values = '';
 		// get the variation IDs  associated with this product
 		$variation_ids = $wpdb->get_col("SELECT `variation_id` FROM `".WPSC_TABLE_VARIATION_ASSOC."` WHERE `type` IN ('product') AND `associated_id` IN ('{$product['id']}')");
@@ -927,7 +961,7 @@ function wpsc_check_weight($state, $product) {
 		}
 		if($has_no_weight === true) {
 			$state['state'] = true;
-			$state['messages'][] = TXT_WPSC_UPS_AND_WEIGHT_ERROR_MESSAGE;
+			$state['messages'][] = __('One or more of your shipping modules does not support products without a weight set. Please either disable shipping for this product or give it a weight', 'wpsc');
 		}
 	}
 	return array('state' => $state['state'], 'messages' => $state['messages']);

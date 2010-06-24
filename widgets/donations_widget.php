@@ -3,7 +3,7 @@ function widget_donations($args) {
   global $wpdb, $table_prefix;
   extract($args);
   $options = get_option('wpsc-nzshpcrt_donations');    
-	$title = empty($options['title']) ? __(TXT_WPSC_DONATIONS) : $options['title'];
+	$title = empty($options['title']) ? __(__('Product Donations', 'wpsc')) : $options['title'];
 	$donation_count = $wpdb->get_var("SELECT COUNT(*) AS `count` FROM `".WPSC_TABLE_PRODUCT_LIST."` WHERE `donation` IN ('1') AND `active` IN ('1')");   
 	if($donation_count > 0) {
     echo $before_widget; 
@@ -44,8 +44,8 @@ function nzshpcrt_donations($input = null) {
 			$currency_sign_location = get_option('currency_sign_location');
 			$currency_type = get_option('currency_type');
 			$currency_symbol = $wpdb->get_var("SELECT `symbol_html` FROM `".WPSC_TABLE_CURRENCY_LIST."` WHERE `id`='".$currency_type."' LIMIT 1") ;
-			$output .= "<label for='donation_widget_price_".$product['id']."'>".TXT_WPSC_DONATION.":</label> $currency_symbol<input type='text' id='donation_widget_price_".$product['id']."' name='donation_price' value='".number_format($product['price'],2)."' size='6' /><br />"; 
-			$output .= "<input type='submit' name='Buy' value='".TXT_WPSC_ADDTOCART."'  />";
+			$output .= "<label for='donation_widget_price_".$product['id']."'>".__('Donation', 'wpsc').":</label> $currency_symbol<input type='text' id='donation_widget_price_".$product['id']."' name='donation_price' value='".number_format($product['price'],2)."' size='6' /><br />"; 
+			$output .= "<input type='submit' name='Buy' value='".__('Add To Cart', 'wpsc')."'  />";
 			$output .= "</form>";
 		}
 		$output .= "</div></div>";
@@ -74,8 +74,8 @@ function widget_donations_control() {
 
 function widget_donations_init() {
   if(function_exists('register_sidebar_widget')) {
-    register_sidebar_widget(TXT_WPSC_DONATIONS, 'widget_donations');
-    register_widget_control(TXT_WPSC_DONATIONS, 'widget_donations_control');
+    register_sidebar_widget(__('Product Donations', 'wpsc'), 'widget_donations');
+    register_widget_control(__('Product Donations', 'wpsc'), 'widget_donations_control');
 	}
   return;
 }

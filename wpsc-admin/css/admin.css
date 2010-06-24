@@ -12,7 +12,23 @@ input[type="checkbox"]{
  outline:none;
  border:0;
 }
+#wpsc_tickets_link{
+	margin-left:10px;
+}
+#wpsc_tickets_link a{
+text-decoration: none;
+height:32px;
+width:15px;
+	background:transparent url(../../images/toolbar.png) no-repeat scroll left -32px;
+	
+	padding-left:15px;
 
+}
+#wpsc_tickets_link a:hover{
+height:32px;
+width:15px;
+	background:transparent url(../../images/toolbar.png) no-repeat scroll left 0;
+}
 #flotplaceholder{
 	 width: 100%; 
 	 height: 200px; 
@@ -877,7 +893,7 @@ div.select_product_file, div.edit_select_product_file {
 a.file_delete_button {
 	cursor:pointer;
 	float:right;
-	margin-top:-17px;
+/* 	margin-top:-17px; */
 	display: block;
 }
 
@@ -1286,10 +1302,13 @@ position:relative;
 width:250px;
 }
 
-table.category_forms  a.delete_button {
+table.category_forms  a.delete_button, span.delete_button {
   display: block;
   margin: 3px 0px 0px 8px;
   float: left;
+  color: #ff0000;
+  text-decoration: underline;
+  font-size: 11px;
 }
 
 table.category_forms td.last_row {
@@ -1384,3 +1403,277 @@ padding-bottom:0 !important;
 	margin: 0px 0px 8px 0px;
 
 }
+
+
+.add_new_form_set {
+/*  display: block;
+  float: left;*/
+  text-decoration: underline;
+  font-weight:	bold;
+  font-size:0.9em;
+}
+
+
+p.add_new_form_set_forms {
+  display: none;
+}
+/* Main Flora Style Sheet for jQuery UI ui-datepicker */
+#ui-datepicker-div, .ui-datepicker-inline {
+	font-family: Arial,Helvetica,sans-serif;
+	font-size: 14px;
+	padding: 0;
+	margin: 0;
+	background: #E0F4D7;
+	width: 185px;
+}
+#ui-datepicker-div {
+	display: none;
+	border: 1px solid #21759B;
+	z-index: 10;
+}
+.ui-datepicker-inline {
+	float: left;
+	display: block;
+	border: 0;
+}
+.ui-datepicker-rtl {
+	direction: rtl;
+}
+.ui-datepicker-dialog {
+	padding: 5px !important;
+	border: 4px ridge #fff !important;
+}
+button.ui-datepicker-trigger {
+	width: 25px;
+}
+img.ui-datepicker-trigger {
+	margin: 2px;
+	vertical-align: middle;
+}
+.ui-datepicker-prompt {
+	float: left;
+	padding: 2px;
+	background: #fff;
+	color: #000;
+}
+*html .ui-datepicker-prompt {
+	width: 185px;
+}
+.ui-datepicker-control, .ui-datepicker-links, .ui-datepicker-header, .ui-datepicker {
+	clear: both;
+	float: left;
+	width: 100%;
+	color: #FFF;
+}
+.ui-datepicker-control {
+	background: #fff;
+	padding: 2px 0px;
+	display:none;
+}
+.ui-datepicker-links {
+	background: #fff;
+	padding: 2px 0px;
+}
+.ui-datepicker-control, .ui-datepicker-links {
+	font-weight: bold;
+	font-size: 80%;
+	letter-spacing: 1px;
+}
+.ui-datepicker-links label {
+	padding: 2px 5px;
+	color: #fff;
+}
+.ui-datepicker-clear, .ui-datepicker-prev {
+	float: left;
+	width: 34%;
+}
+.ui-datepicker-rtl .ui-datepicker-clear, .ui-datepicker-rtl .ui-datepicker-prev {
+	float: right;
+	text-align: right;
+}
+.ui-datepicker-current {
+	float: left;
+	width: 30%;
+	text-align: center;
+}
+.ui-datepicker-close, .ui-datepicker-next {
+	float: right;
+	width: 34%;
+	text-align: right;
+}
+.ui-datepicker-rtl .ui-datepicker-close, .ui-datepicker-rtl .ui-datepicker-next {
+	float: left;
+	text-align: left;
+}
+.ui-datepicker-header {
+	padding: 1px 0 3px;
+	background: #fff;
+	text-align: center;
+	font-weight: bold;
+	height: 1.3em;
+}
+.ui-datepicker-header select {
+	background: #fff;
+	color: #000;
+	border: 0px;
+	font-weight: bold;
+}
+.ui-datepicker {
+	background: #fff;
+	text-align: center;
+	font-size: 100%;
+}
+.ui-datepicker a {
+	display: block;
+	width: 100%;
+}
+.ui-datepicker-title-row {
+	background: #fff;
+	color: #000;
+}
+.ui-datepicker-title-row .ui-datepicker-week-end-cell {
+	background: #fff;
+}
+.ui-datepicker-days-row {
+	background: #FFF;
+	color: #666;
+}
+.ui-datepicker-week-col {
+	background: #ededed;
+	color: #000;
+}
+.ui-datepicker-days-cell {
+	color: #000;
+	border: 1px solid #DDD;
+}
+.ui-datepicker-days-cell a {
+	display: block;
+}
+.ui-datepicker-week-end-cell {
+	background: #EAF2FA;
+}
+.ui-datepicker-unselectable {
+	color: #888;
+}
+.ui-datepicker-week-over, .ui-datepicker-week-over .ui-datepicker-week-end-cell {
+	background: #B1DB87 !important;
+}
+.ui-datepicker-days-cell-over, .ui-datepicker-days-cell-over.ui-datepicker-week-end-cell {
+	background: #FFF !important;
+	border: 1px solid #777;
+}
+* html .ui-datepicker-title-row .ui-datepicker-week-end-cell {
+	background: #ddd !important;
+}
+* html .ui-datepicker-week-end-cell {
+	background: #ddd !important;
+	border: 1px solid #DDD !important;
+}
+* html .ui-datepicker-days-cell-over {
+	background: #FFF !important;
+	border: 1px solid #777 !important;
+}
+* html .ui-datepicker-current-day {
+	background: #d3d3d3 !important;
+}
+.ui-datepicker-today {
+	background: #dddddd !important;
+}
+.ui-datepicker-current-day {
+	background: #d3d3d3 !important;
+}
+.ui-datepicker-status {
+	background: #fff;
+	width: 100%;
+	font-size: 80%;
+	text-align: center;
+}
+#ui-datepicker-div a, .ui-datepicker-inline a {
+	cursor: pointer;
+	margin: 0;
+	padding: 0;
+	background: none;
+	color: #000;
+}
+.ui-datepicker-inline .ui-datepicker-links a {
+	padding: 0 5px !important;
+}
+.ui-datepicker-control a, .ui-datepicker-links a {
+	padding: 2px 5px !important;
+	color: #000 !important;
+}
+.ui-datepicker-title-row a {
+	color: #000 !important;
+}
+.ui-datepicker-control a:hover {
+	background: #f1f1f1 !important;
+	color: #333 !important;
+}
+.ui-datepicker-links a:hover, .ui-datepicker-title-row a:hover {
+	background: #FFF !important;
+	color: #333 !important;
+}
+.ui-datepicker-multi .ui-datepicker {
+/* 	border: 1px solid #83C948; */
+}
+.ui-datepicker-one-month {
+	float: left;
+	width: 185px;
+}
+.ui-datepicker-new-row {
+	clear: left;
+}
+.ui-datepicker-cover {
+	display: none;
+	display: block;
+	position: absolute;
+	z-index: -1;
+	filter: mask();
+	top: -4px;
+	left: -4px;
+	width: 193px;
+	height: 200px;
+}
+.displaynone{
+display:none;
+}
+/* end of ui datepicker styles */
+
+/* marketing / coupon page styling */
+
+div.modify_coupon{ 
+border: 1px solid #eeeeee;  width: 100%; 
+background-color: #eeeeee;
+margin-bottom:40px;
+
+}
+.wpsc_coupons_condition_add{
+font-size: 11px;
+text-decoration: underline;
+}
+
+.first_condition{
+	margin-left: 20px;
+}
+table.coupon_data{
+ width: 100%;
+  }
+  
+table.add-coupon tr th{ text-align: left; padding: 2px 5px 0px 5px; }
+table.add-coupon tr td{ text-align: left; padding: 2px 5px 2px 5px; }
+  
+#table_header{
+	margin-top:20px;
+	font-weight: bold;
+}
+table.coupon-list{ width: 100%; }
+table.coupon-list th{ text-align:left;}
+table.coupon-list tr.toprow td{ text-align: left; font-weight:bold; }
+  
+table.coupon-list tr td{ padding: 2px 5px 2px 5px; }
+  
+table.coupon-list tr.alt{ background-color: #eeeeee; }
+
+table.coupon-list tr.alt td{ background-color: #eeeeee; padding:10px 5px; }
+
+td#order_summary_container{ width: 80px; }

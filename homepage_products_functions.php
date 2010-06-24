@@ -82,7 +82,7 @@ function nszhpcrt_category_tag($content = '') {
 	}
 
 		foreach((array)$activated_widgets as $widget_container) {
-			if(is_array($widget_container) && array_search(TXT_WPSC_DONATIONS, $widget_container)) {
+			if(is_array($widget_container) && array_search(__('Product Donations', 'wpsc'), $widget_container)) {
 				$no_donations_sql = "AND `".WPSC_TABLE_PRODUCT_LIST."`.`donation` != '1'";
 				break;
 			}
@@ -154,7 +154,7 @@ function nszhpcrt_category_tag($content = '') {
 						if($product['additional_description'] != '') {
 							$output .= "<a href='#' class='additional_description_link' onclick='return show_additional_description(\"additionaldescription".$product['id']."\",\"link_icon".$product['id']."\");'>";
 							$output .= "<img id='link_icon".$product['id']."' class='additional_description_button'  src='".WPSC_URL."/images/icon_window_expand.gif' title='".$product['name']."' alt='".$product['name']."' />";
-							$output .= TXT_WPSC_MOREDETAILS."</a>";
+							$output .= __('More Details', 'wpsc')."</a>";
 						
 							$output .= "<span class='additional_description' id='additionaldescription".$product['id']."'><br />";
 							$output .= nl2br(stripslashes($product['additional_description'])) . "";
@@ -186,7 +186,7 @@ function nszhpcrt_category_tag($content = '') {
 						if(isset($wpsc_theme) && is_array($wpsc_theme) && ($wpsc_theme['html'] !='')) {
 							$output .= $wpsc_theme['html'];
 						} else {
-							$output .= "<input type='submit' id='product_".$product['id']."_submit_button' class='wpsc_buy_button' name='Buy' value='".TXT_WPSC_ADDTOCART."'  />";
+							$output .= "<input type='submit' id='product_".$product['id']."_submit_button' class='wpsc_buy_button' name='Buy' value='".__('Add To Cart', 'wpsc')."'  />";
 						}
 					}
 					$output .= "</form>";
@@ -202,19 +202,19 @@ function nszhpcrt_category_tag($content = '') {
 							$output .= "<div class='product_footer'>";
 							
 							$output .= "<div class='product_average_vote'>";
-							$output .= "<strong>".TXT_WPSC_AVGCUSTREVIEW.":</strong>";
+							$output .= "<strong>".__('Avg. Customer Rating', 'wpsc').":</strong>";
 							$output .= nzshpcrt_product_rating($product['id']);
 							$output .= "</div>";
 							
 							$output .= "<div class='product_user_vote'>";
 							$vote_output = nzshpcrt_product_vote($product['id'],"onmouseover='hide_save_indicator(\"saved_".$product['id']."_text\");'");
 							if($vote_output[1] == 'voted') {
-								$output .= "<strong><span id='rating_".$product['id']."_text'>".TXT_WPSC_YOURRATING.":</span>";
-								$output .= "<span class='rating_saved' id='saved_".$product['id']."_text'> ".TXT_WPSC_RATING_SAVED."</span>";
+								$output .= "<strong><span id='rating_".$product['id']."_text'>".__('Your Rating', 'wpsc').":</span>";
+								$output .= "<span class='rating_saved' id='saved_".$product['id']."_text'> ".__('Saved', 'wpsc')."</span>";
 								$output .= "</strong>";
 							} else if($vote_output[1] == 'voting') {
-								$output .= "<strong><span id='rating_".$product['id']."_text'>".TXT_WPSC_RATETHISITEM.":</span>";
-								$output .= "<span class='rating_saved' id='saved_".$product['id']."_text'> ".TXT_WPSC_RATING_SAVED."</span>";
+								$output .= "<strong><span id='rating_".$product['id']."_text'>".__('Rate This item', 'wpsc').":</span>";
+								$output .= "<span class='rating_saved' id='saved_".$product['id']."_text'> ".__('Saved', 'wpsc')."</span>";
 								$output .= "</strong>";
 							}
 							$output .= $vote_output[0];

@@ -10,48 +10,55 @@ function wpsc_display_upgrades_page() {
 			*/
 			?>
 			<strong><?php _e('WP e-Commerce Upgrades'); ?></strong><br />
-			<span><?php _e('Add more functionality to your e-Commerce site. Prices may be subject to change.'); ?><input type='button' class='button-primary' onclick='window.open ("http://www.instinct.co.nz/shop/","mywindow"); ' value='Buy Now' id='visitInstinct' name='visitInstinct' /></span>
+			<span><?php _e('Add more functionality to your e-Commerce site. Prices may be subject to change.'); ?><input type='button' class='button-primary' onclick='window.open ("http://getshopped.org/extend/premium-upgrades/","mywindow"); ' value='Buy Now' id='visitInstinct' name='visitInstinct' /></span>
 			
 			<br />
+			<div style='padding-top:40px;'></div>
 			<div class='wpsc_gold_module'>
 				<br />
 				<strong><?php _e('Pure Gold'); ?></strong>
+				<br />
 				<p class='wpsc_gold_text'>Add product search, multiple image upload, gallery view, Grid View and multiple payment gateway options to your shop</p>
 				<span class='wpsc_gold_info'>$40</span>
 			</div>
 			<div class='wpsc_gold_module'>
 				<br />
 				<strong><?php _e('DropShop'); ?></strong>
+				<br />
 				<p class='wpsc_gold_text'>Impress your customers with our AJAX powered DropShop that lets your customers drag and drop products into their shopping cart</p>
-				<span class='wpsc_gold_info'>$75</span>
+				<span class='wpsc_gold_info'>$100</span>
 			</div>
 			<div class='wpsc_gold_module'>
 				<br />
 				<strong><?php _e('MP3 Player'); ?></strong>
+				<br />
 				<p class='wpsc_gold_text'>Adding this module lets you upload and manage MP3 preview files that can be associated with your digital downloads.</p>
 				<span class='wpsc_gold_info'>$10</span>
 			</div>
 			<div class='wpsc_gold_module'>
 				<br />
 				<strong><?php _e('Members Only Module'); ?> </strong>
+				<br />
 				<p class='wpsc_gold_text'>The Members modules lets you set private pages and posts that are only available to paying customers. Activating this module also adds a new option under "WordPress Users" menu that shop owners can use to manage their subscribers.</p>
 				<span class='wpsc_gold_info'>$25</span>
 			</div>
 			<div class='wpsc_gold_module'>
 				<br />
 				<strong><?php _e('Product Slider'); ?> </strong>
+				<br />
 				<p class='wpsc_gold_text'>Display your products in a new and fancy way using the "Product Slider" module.</p>
 				<span class='wpsc_gold_info'>$25</span>
 			</div>
 			<div class='wpsc_gold_module'>
 				<br />
 				<strong><?php _e('NextGen Gallery Buy Now Buttons'); ?> </strong>
+				<br />
 				<p class='wpsc_gold_text'>Make your Online photo gallery into an e-Commerce solution.</p>
 				<span class='wpsc_gold_info'>$10</span>
 			</div>
 		</div>
 
-		<h2><?php echo TXT_WPSC_UPGRADES_PAGE;?></h2>
+		<h2><?php echo __('Upgrades', 'wpsc');?></h2>
 		<div class='wpsc_gold_float'>
 			<div class='metabox-holder'>
 				<form method='post' id='gold_cart_form' action=''>
@@ -68,26 +75,26 @@ function wpsc_display_upgrades_page() {
 					  </div>
 
 					  
-						<h2><?php echo TXT_WPSC_API_RESET;?></h2>
+						<h2><?php echo __('API Key Reset', 'wpsc');?></h2>
 					  <div class='form-wrap' >
 							<p>
-								<?php echo TXT_WPSC_API_RESET_DESCRIPTION;?> <br /><br />
+								<?php echo __('Enter your API name and key to release it from an old site that you no longer use.', 'wpsc');?> <br /><br />
 							</p>
 					  </div>
 					  </div>
 						<div class='postbox'>
-							<h3 class='hndle'><?php echo TXT_WPSC_API_RESET;?></h3>
+							<h3 class='hndle'><?php echo __('API Key Reset', 'wpsc');?></h3>
 							<p>
-										<label for='activation_name'><?php echo TXT_WPSC_NAME;?>:</label>
+										<label for='activation_name'><?php echo __('Name', 'wpsc');?>:</label>
 										<input class='text' type='text' size='40' value='<?php echo get_option('activation_name'); ?>' name='activation_name' id='activation_name' />
 							</p>
 							<p>
-										<label for='activation_key'><?php echo TXT_WPSC_ACTIVATION_KEY;?>:</label>
+										<label for='activation_key'><?php echo __('API Key', 'wpsc');?>:</label>
 										<input class='text' type='text' size='40' value='<?php echo get_option('activation_key'); ?>' name='activation_key' id='activation_key' />
 							</p>
 							<p>
 										<input type='hidden' value='true' name='reset_api_key' />
-										<input type='submit' class='button-primary' value='<?php echo TXT_WPSC_RESET_API;?>' name='submit_values' />
+										<input type='submit' class='button-primary' value='<?php echo __('Reset API Key', 'wpsc');?>' name='submit_values' />
 							</p>
 						</div>
 						<?php
@@ -97,20 +104,26 @@ function wpsc_display_upgrades_page() {
 
 				
 				<h2><?php echo __("Upgrade Instructions", 'wpsc');?></h2>
+				<h4><?php _e(''); ?></h4>
 				<p>
-					<?php printf(__("Copy the gold_cart_files directory into the %s folder.", 'wpsc'),  WPSC_UPGRADES_DIR ); ?>
+					<?php printf(__("If your gold cart files are called 'gold_cart_files': Copy the gold_cart_files directory into the %s folder.", 'wpsc'),  WPSC_UPGRADES_DIR ); ?>
 				</p>
 				<p>
 					<?php _e("This folder should be automatically created when the e-commerce plugin is activated, but if it is not, you will have to create it yourself.", 'wpsc'); ?>
 				</p>
 				<p>
-					<?php _e("Now a new panel should appear in the Upgrades page where you must enter your API Username and API Key. ", 'wpsc'); ?>
+					<?php printf(__("Otherwise If your gold cart files are called 'gold_cart_files_plugin': Copy the gold_cart_files_plugin directory into the %s folder.", 'wpsc'),  WP_PLUGIN_DIR ); ?>
 				</p>
 				<p>
-					<?php _e("For more information visit our documentation page.", 'wpsc'); ?>
+					<?php _e('You can find more information on installing Gold Cart in your readme.txt inside the gold cart folder. ');?>
 				</p>
+
 				<p>
-					<a href='http://www.instinct.co.nz/e-commerce/docs/'> <?php _e("For more information visit our documentation page.", 'wpsc'); ?></a>
+					<?php _e("Once you have done the above a new panel should appear on the Upgrades page where you must enter your API Username and API Key. ", 'wpsc'); ?>
+				</p>
+
+				<p>
+					<a href='http://getshopped.org/resources/docs/'> <?php _e("For more information visit our documentation page.", 'wpsc'); ?></a>
 				</p>
 				
 			</div> 
@@ -154,7 +167,7 @@ if($_POST['reset_api_key'] == 'true') {
 		$returned_value = (int)trim($response[1]);
 		update_option('activation_name', "");
 		update_option('activation_key', "");
-		echo "<div class='updated'><p align='center'>".TXT_WPSC_API_HAS_BEEN_RESET."</p></div>";
+		echo "<div class='updated'><p align='center'>".__('Your API key has been Reset', 'wpsc')."</p></div>";
 
 		}
 	}

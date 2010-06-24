@@ -4,13 +4,13 @@ function wpsc_options_general(){
 ?>
 	<form name='cart_options' id='cart_options' method='post' action=''>
 	<div id="options_general">
-		<h2><?php echo TXT_WPSC_OPTIONS_GENERAL_HEADER; ?></h2>
+		<h2><?php _e('General Settings', 'wpsc'); ?></h2>
 		<?php 
 		/* wpsc_setting_page_update_notification displays the wordpress styled notifications */
 		wpsc_settings_page_update_notification(); ?>
 		<table class='wpsc_options form-table'>
 		<tr>
-			<th scope="row"><?php echo TXT_WPSC_BASE_COUNTRY; ?>: </th>
+			<th scope="row"><?php echo __('Base Country/Region', 'wpsc'); ?>: </th>
 			<td>
 				<select name='wpsc_options[base_country]' onchange='submit_change_country();'>
 				<?php echo country_list(get_option('base_country')); ?>
@@ -36,11 +36,11 @@ function wpsc_options_general(){
 				   
 		<?php  	 }	?>
 				</span>
-				<br /><?php echo TXT_WPSC_SELECTYOURBUSINESSLOCATION;?>
+				<br /><?php echo __('Select your primary business location.', 'wpsc');?>
 			</td>
 		</tr>
 		<tr>
-			<th scope="row"><?php echo TXT_WPSC_TAX_SETTINGS;?>:</th>
+			<th scope="row"><?php echo __('Tax Settings', 'wpsc');?>:</th>
 			<td>
 				<span id='options_region'>
 				<?php
@@ -56,12 +56,31 @@ function wpsc_options_general(){
 				</span>
 			</td>
 		</tr>
+		<tr>
+			<th scope="row"><?php _e('Tax Included in prices','wpsc') ?>:</th>		
+			<td>
+				<?php
+					$tax_inprice0= '';
+					$tax_inprice1= '';
+				if(wpsc_tax_isincluded()){
+					$tax_inprice1= 'checked="checked"';
+				}else{
+					$tax_inprice0= 'checked="checked"';
+				}
+				?>
+				<input <?php echo $tax_inprice1; ?> type='radio' name='wpsc_options[tax_inprice]' value='1' id='tax_inprice1' />
+				<label for='tax_inprice1'><?php echo __('Yes', 'wpsc'); ?></label>
+				<input <?php echo $tax_inprice0; ?> type='radio' name='wpsc_options[tax_inprice]' value='0' id='tax_inprice0' />
+				<label for='tax_inprice1'><?php echo __('No', 'wpsc'); ?></label>
+			</td>
+		</tr>
+
 		<?php	/* START OF TARGET MARKET SELECTION */					
 		$countrylist = $wpdb->get_results("SELECT id,country,visible FROM `".WPSC_TABLE_CURRENCY_LIST."` ORDER BY country ASC ",ARRAY_A);
 		?>
 		<tr>
 			<th scope="row">
-			<?php echo TXT_WPSC_TM; ?>:
+			<?php echo __('Target Markets', 'wpsc'); ?>:
 			</th>
 			<td>
 				<?php
@@ -92,120 +111,12 @@ function wpsc_options_general(){
 			?>
 			</td>
 		</tr>
-		<tr>
-			<th scope="row"><?php echo TXT_WPSC_LANGUAGE;?>:</th>
-			<td>
-				<select name='wpsc_options[language_setting]'>
-			<?php
-			if(get_option('language_setting') != '') {
-				$language_setting = get_option('language_setting');
-			} else {
-				$language_setting = "EN_en.php";
-			}
-			$languages_directory = WPSC_FILE_PATH.'/languages';
-			$language_files = wpsc_list_dir($languages_directory);
-			foreach($language_files as $language_file) {
-				switch($language_file) {
-					case "EN_en.php";
-					$language = "English";
-					break;
-					
-					case "DE_de.php";
-					$language = "Deutsch";
-					break;
-					
-					case "NL_nl.php";
-					$language = "Dutch";
-					break;
-				
-					case "FR_fr.php";
-					$language = "Français";
-					break;
-					
-					case "IT_it.php";
-					$language = "Italian";
-					break;
-					
-					case "BG_bg.php";
-					$language = 'български';
-					break;
-					
-					case "JP_jp.php";
-					$language = "日本語";
-					break;
-					
-					case "pt_BR.php";
-					$language = "Brazilian Portuguese";
-					break;
-										
-					case "RU_ru.php";
-					$language = "Russian";
-					break;
-					
-					case "SP_sp.php";
-					$language = "Spanish";
-					break;
-					
-					case "HU_hu.php";
-					$language = "Hungarian";
-					break;
-					
-					case "SV_sv.php";
-					$language = "Swedish";
-					break;
-									
-					case "TR_tr.php";
-					$language = "Türkçe";
-					break; 
-	
-					case "EL_el.php";
-					$language = "Ελληνικά";
-					break;
-	
-					case "KO_ko.php";
-					$language = "Korean";
-					break;
-					
-					case "zh_CN.php";
-					$language = "简体中文";
-					break;
-					
-					case "DK_da.php";
-					$language = "Danish";
-					break;
-					
-					case "RO_ro.php";
-					$language = "Romanian";
-					break;
-					
-					case "nn_NO.php";
-					$language = "Norwegian";
-					break;
-
-					
-					case "CZ_cz.php";
-					$language = "Czech";
-					break;
-											
-					default:
-					continue 2;
-					break;
-				}
-				if($language_setting == $language_file) { ?>
-					<option selected='selected' value='<?php echo $language_file; ?>'><?php echo $language; ?></option>
-		<?php	} else { ?>
-					<option value='<?php echo $language_file; ?>'><?php echo $language; ?></option>            
-		<?php	}
-			}	?>
-				</select>
-			</td>
-		</tr>
 		</table> 
 							
-		<h3 class="form_group"><?php echo TXT_WPSC_CURRENCYSETTINGS;?>:</h3>
+		<h3 class="form_group"><?php echo __('Currency Settings', 'wpsc');?>:</h3>
 		<table class='wpsc_options form-table'>
 		<tr>
-			<th scope="row"><?php echo TXT_WPSC_CURRENCYTYPE;?>:</th>
+			<th scope="row"><?php echo __('Currency type', 'wpsc');?>:</th>
 			<td>
 				<select name='wpsc_options[currency_type]' onchange='getcurrency(this.options[this.selectedIndex].value);'>
 				<?php
@@ -229,7 +140,7 @@ function wpsc_options_general(){
 			</td>
 		</tr>
 		<tr>
-			<th scope="row"><?php echo TXT_WPSC_CURRENCYSIGNLOCATION;?>:</th>
+			<th scope="row"><?php echo __('Currency sign location', 'wpsc');?>:</th>
 			<td>
 				<?php
 				$currency_sign_location = get_option('currency_sign_location');
@@ -265,11 +176,35 @@ function wpsc_options_general(){
 				<label for='csl4'><span id='cslchar4'><?php echo $currency_sign; ?></span> 100</label>
 			</td>
 		</tr>
+		<tr>
+			<?php 
+			$decimals = get_option('wpsc_hide_decimals');
+			switch($decimals){
+				case '1':
+				$decimal1 = 'checked="checked"';
+				break;
+			
+				case '0':
+				default:
+				$decimal2 = 'checked="checked"';
+				break;
+			}
+			
+			?>
+			<th scope="row"><?php _e('Hide Decimals on Products Pages'); ?></th>
+			<td>
+			<input type='radio' value='1' name='wpsc_options[wpsc_hide_decimals]' id='hide_decimals1' <?php echo $decimal1; ?> />
+			<label for='hide_decimals1'><?php _e('Yes'); ?></label>
+
+			<input type='radio' value='0' name='wpsc_options[wpsc_hide_decimals]' id='hide_decimals2' <?php echo $decimal2; ?> />
+			<label for='hide_decimals2'><?php _e('No'); ?></label>
+			</td>
+		</tr>
 		</table> 
 		<div class="submit">
 			<input type='hidden' name='wpsc_admin_action' value='submit_options' />
 			<?php wp_nonce_field('update-options', 'wpsc-update-options'); ?>
-			<input type="submit" value="<?php echo TXT_WPSC_UPDATE_BUTTON;?>" name="updateoption"/>
+			<input type="submit" value="<?php echo __('Update &raquo;', 'wpsc');?>" name="updateoption"/>
 		</div>
 	</div>
 	</form>

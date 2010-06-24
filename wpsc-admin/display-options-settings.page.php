@@ -7,12 +7,19 @@
  if($_GET['tab'] != 'shipping') {
    $_SESSION['previous_shipping_name'] = '';
  }
+
  
  
 function wpsc_display_settings_page(){
 ?>
  <div id="wpsc_options" class="wrap">
-<?php wpsc_the_settings_tabs(); 
+	<?php if(wpsc_check_theme_versions()){ ?>
+		<div class="updated fade below-h2" id="message" style="background-color: rgb(255, 251, 204);">
+			<p><?php _e("It looks like your wp-e-commerce theme files are out of date, this can cause potential problems with some gateways and the appearances of the front end of your shop. <br /><strong>We recommend you download the latest version of wp-e-commerce unzip it, and copy the new themes folder into your 'uploads/wpsc/themes' folder on your site. Or port your changes across.</strong>", "wpsc"); ?></p>
+		</div>
+	<?php
+}
+ wpsc_the_settings_tabs(); 
 if(isset($_GET['tab'])){
 	$page = $_GET['tab'];
 }else{
@@ -162,11 +169,11 @@ function wpsc_get_shipping_form($shippingname) {
   global $wpdb, $wpsc_shipping_modules;
   if(array_key_exists($shippingname, $wpsc_shipping_modules)){
 		$shipping_forms = $wpsc_shipping_modules[$shippingname]->getForm();
-		$shipping_module_name = $wpsc_shipping_modules[$shippingname]->name;
+		$shipping_module_name = $wpsc_shipping_modules[$shippingname]->getName();
 		
 		$output = array('name' => $shipping_module_name, 'form_fields' => $shipping_forms, 'has_submit_button' => 1);
   } else {
-		$output = array('name' => '&nbsp;', 'form_fields' => TXT_WPSC_CONFIGURE_SHIPPING_MODULES, 'has_submit_button' => 0);
+		$output = array('name' => '&nbsp;', 'form_fields' => __('To configure a shipping module select one on the left.', 'wpsc'), 'has_submit_button' => 0);
   }
   return $output;
 }

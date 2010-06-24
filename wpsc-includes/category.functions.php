@@ -143,7 +143,7 @@ function wpsc_display_category_loop($query, $category_html){
 	if(is_numeric($query['category_group']) ) {
 	  $category_group = absint($query['category_group']);
       $category_sql_segment[] = "`group_id`='$category_group'";
-	} else if($query['category_group']=='all' ||$query['category_group']=='all+list') {
+	} elseif($query['category_group']=='all' ||$query['category_group']=='all+list') {
 	  $category_group = 1;
 	}
 
@@ -161,13 +161,10 @@ function wpsc_display_category_loop($query, $category_html){
 	} else {
 		$order = "ASC";
 	}
-	//exit("SELECT  `id`, `name`, `nice-name`, `description`, `image` FROM `".WPSC_TABLE_PRODUCT_CATEGORIES."` WHERE ".implode(" AND ", $category_sql_segment)." ORDER BY `{$column}` $order");
 	$category_sql_segment = apply_filters('wpsc_display_category_loop_category_sql_segments', $category_sql_segment); 
-  
 
   $category_data = $wpdb->get_results("SELECT  `id`, `name`, `nice-name`, `description`, `image` FROM `".WPSC_TABLE_PRODUCT_CATEGORIES."` WHERE ".implode(" AND ", $category_sql_segment)." ORDER BY `{$column}` $order",ARRAY_A);
 
-   //echo "<pre>".print_r($category_sql_segment, true)."</pre>";
   $output ='';
   foreach((array)$category_data as $category_row) {
     $modified_query = $query;
@@ -188,9 +185,17 @@ function wpsc_display_category_loop($query, $category_html){
 		}
 	
 	$category_classes = 'wpsc-cat-item wpsc-cat-item-' . $category_row['id'];
+	
 	if ( $wpsc_query->query_vars['category_id'] == $category_row['id']) {
 		$category_classes .= ' wpsc-current-cat';
 	}
+	foreach ( $wpsc_query->breadcrumbs as $breadcrumb ) {
+		if ( $breadcrumb['id'] == $category_row['id'] ) {
+			$category_classes .= ' wpsc-cat-ancestor';
+			break;
+		}
+	}
+	
 	
     $sub_categories = wpsc_display_category_loop($modified_query, $category_html);
     if($sub_categories != '') {
@@ -353,7 +358,7 @@ function show_cats_brands($category_group = null , $display_method = null, $orde
 
   switch(get_option('show_categorybrands')) {
     case 1:
-      $output .= "<ul id='PeCatsBrandsBoth' class='category_brand_header'><li id='PeSwitcherFirst'><a href='' onclick='return prodgroupswitch(\"categories\");'>".TXT_WPSC_CATEGORIES."</a> | <a href='' onclick='return prodgroupswitch(\"brands\");'>".TXT_WPSC_BRANDS."</a></li></ul>";
+      $output .= "<ul id='PeCatsBrandsBoth' class='category_brand_header'><li id='PeSwitcherFirst'><a href='' onclick='return prodgroupswitch(\"categories\");'>".__('Categories', 'wpsc')."</a> | <a href='' onclick='return prodgroupswitch(\"brands\");'>".__('Brands', 'wpsc')."</a></li></ul>";
       break;
   }
   $output .= "</div>";
@@ -627,4 +632,24 @@ function nzshpcrt_display_categories_groups() {
     ob_end_clean();
     return $output;
   }
+
+/** wpsc list subcategories function
+		used to get an array of all the subcategories of a category.
+
+*/
+function wpsc_list_subcategories($category_id = null) {
+  global $wpdb,$category_data;
+  if(is_numeric($category_id)) {
+    $category_list = $wpdb->get_col("SELECT `id` FROM `".WPSC_TABLE_PRODUCT_CATEGORIES."` WHERE `category_parent` = '".$category_id."'");
+	}
+  if($category_list != null) {
+    foreach($category_list as $subcategory_id) {
+			$category_list = array_merge((array)$category_list, (array)wpsc_list_subcategories($subcategory_id));
+		}
+	}
+	return $category_list;
+}
+
+
+  
 ?>

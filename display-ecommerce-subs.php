@@ -6,7 +6,7 @@
 	echo "<h2>e-Commerce Subscribers</h2>";
 	echo "<table class='widefat'>";
 	echo "<tr>";
-	echo "<th>".TXT_WPSC_USERID."</th><th>".TXT_WPSC_NAME."</th><th>".TXT_WPSC_EMAIL."</th><th>".TXT_WPSC_REGISTEREDDATE."</th><th>".TXT_WPSC_SUSPEND."/".TXT_WPSC_ACTIVATE."</th>";
+	echo "<th>".__('User ID', 'wpsc')."</th><th>".__('Name', 'wpsc')."</th><th>".__('Email', 'wpsc')."</th><th>".__('Registered Date', 'wpsc')."</th><th>".__('Suspend', 'wpsc')."/".__('Activate', 'wpsc')."</th>";
 	echo "</tr>";
 	if ($results != NULL){
 	$now = time();

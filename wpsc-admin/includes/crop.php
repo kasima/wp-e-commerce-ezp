@@ -14,7 +14,7 @@ $directory = WPSC_IMAGE_URL;//set directory
 $path = WPSC_IMAGE_DIR;
 $image_data = getimagesize($path.$imagename);
 //exit('<pre>'.print_r($image_data, true).'</pre>');
-$width = $image_data[0];//set image dimensions
+$width = $image_data[0]; //set image dimensions
 $height = $image_data[1];
 $product_id = $_GET['product_id'];
 

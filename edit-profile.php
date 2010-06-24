@@ -28,37 +28,37 @@ if($_POST['collected_data'] != null) {
         }
       if($bad_input === true) {
         switch($form_data['name']) {
-          case TXT_WPSC_FIRSTNAME:
-          $bad_input_message .= TXT_WPSC_PLEASEENTERAVALIDNAME . "";
+          case __('First Name', 'wpsc'):
+          $bad_input_message .= __('Please enter a valid name', 'wpsc') . "";
           break;
   
-          case TXT_WPSC_LASTNAME:
-          $bad_input_message .= TXT_WPSC_PLEASEENTERAVALIDSURNAME . "";
+          case __('Last Name', 'wpsc'):
+          $bad_input_message .= __('Please enter a valid surname', 'wpsc') . "";
           break;
   
-          case TXT_WPSC_EMAIL:
-          $bad_input_message .= TXT_WPSC_PLEASEENTERAVALIDEMAILADDRESS . "";
+          case __('Email', 'wpsc'):
+          $bad_input_message .= __('Please enter a valid email address', 'wpsc') . "";
           break;
   
-          case TXT_WPSC_ADDRESS1:
-          case TXT_WPSC_ADDRESS2:
-          $bad_input_message .= TXT_WPSC_PLEASEENTERAVALIDADDRESS . "";
+          case __('Address 1', 'wpsc'):
+          case __('Address 2', 'wpsc'):
+          $bad_input_message .= __('Please enter a valid address', 'wpsc') . "";
           break;
   
-          case TXT_WPSC_CITY:
-          $bad_input_message .= TXT_WPSC_PLEASEENTERAVALIDCITY . "";
+          case __('City', 'wpsc'):
+          $bad_input_message .= __('Please enter your town or city.', 'wpsc') . "";
           break;
   
-          case TXT_WPSC_PHONE:
-          $bad_input_message .= TXT_WPSC_PLEASEENTERAVALIDPHONENUMBER . "";
+          case __('Phone', 'wpsc'):
+          $bad_input_message .= __('Please enter a valid phone number', 'wpsc') . "";
           break;
   
-          case TXT_WPSC_COUNTRY:
-          $bad_input_message .= TXT_WPSC_PLEASESELECTCOUNTRY . "";
+          case __('Country', 'wpsc'):
+          $bad_input_message .= __('Please select your country from the list.', 'wpsc') . "";
           break;
   
           default:
-          $bad_input_message .= TXT_WPSC_PLEASEENTERAVALID . " " . strtolower($form_data['name']) . ".";
+          $bad_input_message .= __('Please enter a valid', 'wpsc') . " " . strtolower($form_data['name']) . ".";
           break;
 				}
         $bad_input_message .= "<br />";
@@ -78,10 +78,10 @@ if($_POST['collected_data'] != null) {
 <?php
 echo " <div class='user-profile-links'><a href='".get_option('user_account_url')."'>Purchase History</a> | <a href='".get_option('user_account_url').$seperator."edit_profile=true'>Your Details</a> | <a href='".get_option('user_account_url').$seperator."downloads=true'>Your Downloads</a></div><br />";
 ?>
-<form method='POST'>
+<form method='post' action=''>
 <?php
 if($changes_saved == true) {
-  echo TXT_WPSC_THANKS_SAVED;
+  echo __('Thanks, your changes have been saved.', 'wpsc');
 } else {
   echo $bad_input_message;
 }
@@ -185,8 +185,9 @@ foreach($form_data as $form_field)
       </td>
       <td>
       <input type='hidden' value='true' name='submitwpcheckout_profile' />
-      <input type='submit' value='<?php echo TXT_WPSC_SAVE_PROFILE;?>' name='submit' />
+      <input type='submit' value='<?php echo __('Save Profile', 'wpsc');?>' name='submit' />
       </td>
     </tr>
 </table>
 </form>
+</div>

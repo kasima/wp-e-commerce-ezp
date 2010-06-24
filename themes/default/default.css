@@ -2,7 +2,7 @@
 Theme Name: Default Theme
 Theme URI: http://instinct.co.nz
 Description: Default Theme
-Version: 3.5
+Version: 3.6
 Author: Thomas Howard
 Author URI: http://instinct.co.nz
 */
@@ -552,7 +552,9 @@ form.wpsc_checkout_forms {
 
 form.wpsc_checkout_forms .login_error {
 	color:red;
+	margin:10px 0;
 }
+
  td.shipping_error {
 	color:red;
 }
@@ -584,7 +586,7 @@ table.wpsc_checkout_table input.text, table.wpsc_checkout_table textarea, table.
 }
 
 table.wpsc_checkout_table select {
-	width:271px !important;
+	width:271px;
 }
  
 tr.product_shipping td h2{
@@ -862,10 +864,10 @@ strong.cattitles{
  */
  
   
-div.wpcart_gallery img {
+div.wpcart_gallery img
+  {
   margin-right: 5px;
-  margin-bottom: 5px;
-}
+  }
   
 /*
  * Fancy notification styling
@@ -1473,7 +1475,7 @@ margin-bottom:10px;
 position:relative;
 }
  .clear_category_group {
-	clear: both;
+/* 	clear: both; */
 }
  .widget_wpsc_categorisation h4.wpsc_category_title {
 	margin-top: 4px;
@@ -1519,4 +1521,100 @@ position:relative;
   float: none;
 }
 
-/* post-content */
+/* html object cart for super cache */
+
+div.shopping-cart-wrapper iframe, div.shopping-cart-wrapper object {
+ border: none;
+ width: 100%;
+ overflow: visible;
+ height:200px;
+ border: 0px;
+}
+
+div.shopping_cart_container {
+ text-align: left !important;
+ font-family:'Lucida Grande',Verdana,Arial,Sans-Serif;
+	font-size:1em;
+	line-height:normal;
+  width: 190px;
+}
+
+div.shopping_cart_container form {
+	margin:0px;
+}
+
+div.shopping_cart_container table, div.shopping_cart_container table tr, div.shopping_cart_container table tr td, div.shopping_cart_container table tr th  {
+	font-size: inherit;
+}
+
+div.shopping_cart_container table tr th {
+	text-align: left;
+	font-family:'Lucida Grande',Verdana,Arial,Sans-Serif;
+	font-size:1em;
+  font-weight: bold;
+}
+
+
+/* product rating CSS */
+
+.wpsc_product_rating select{
+	width:4em;
+}
+.wpsc_product_rating input{
+	width:4em;
+	
+}
+
+.wpsc_product_rating .star {
+	cursor:pointer;
+	text-indent:-999em;
+	display: block;
+  width: 18px;
+  width: 17px;
+ float: left;
+}
+
+.wpsc_product_rating .star a {
+	background-position:0 0;
+	display:block;
+	height:100%;
+	background:transparent url(images/grey-star.gif) no-repeat scroll 0 0;
+  outline: none;
+}
+
+.wpsc_product_rating .star a:hover {
+	background-position:0 0;
+	background:transparent url(images/gold-star.gif) no-repeat scroll 0 0;
+}
+
+.wpsc_product_rating .star a.selected {
+	background-position:0 0;
+	background:transparent url(images/gold-star.gif) no-repeat scroll 0 0;
+}
+.wpsc_product_rating .star a, .wpsc_product_rating .star a:focus {
+	outline: none;
+}
+
+
+.entry .paypal_express_form form {
+  text-align: left;
+}
+
+
+.paypal_express_form .firstcol {
+  text-align: left;
+  width: 200px;
+}
+
+
+
+.wpsc_category_boundary {
+clear: both;
+}
+
+
+
+h3.wpsc_category_boundary {
+	margin: 0px 0px 5px 0px;
+  font-size: 1.4em;
+}

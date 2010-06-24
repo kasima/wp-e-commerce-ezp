@@ -235,11 +235,13 @@ jQuery("div.previewimage").hover(
 	}
 );
 
-jQuery("a.closeimagesettings").click(
+jQuery(".closeimagesettings").click(
 	function (e) {
+		alert('uhuh');
 		jQuery("div#image_settings_box").hide();
 	}
 );
+
 
 jQuery("#table_rate_price").click(
 	function() {
@@ -588,6 +590,26 @@ jQuery(window).load( function () {
 	  wpsc_save_postboxes_state('products', '.additem');
 	});
 	
+	/* 	Coupon edit functionality */
+	jQuery('.modify_coupon').hide();
+	jQuery('.wpsc_edit_coupon').click(function(){
+		id = jQuery(this).attr('title');
+		if(jQuery('#'+id).hasClass('displaynone')){
+			jQuery('#'+id).parent('.modify_coupon').show();
+			jQuery('#'+id).removeClass('displaynone');		
+		}else{
+			jQuery('#'+id).addClass('displaynone');
+			jQuery('#'+id).parent('.modify_coupon').hide();
+		}
+
+	});
+	jQuery("form[name='add_coupon'] input[name='submit_coupon']").click(function() {
+		var title = jQuery("form[name='add_coupon'] input[name='add_coupon_code']").val();
+		if ( title == '') {
+			alert('Please enter a coupon code.');
+			return false;
+		}
+	});
 	jQuery('a.closeEl').bind('click', toggleContent);
 /*
  	jQuery('div.groupWrapper').sortable( {
@@ -777,6 +799,7 @@ jQuery(document).ready(function(){
 		}
 	);
 	
+	/* jQuery datepicker selector */
 	if (typeof jQuery('.pickdate').datepicker != "undefined") {
 		jQuery('.pickdate').datepicker({ dateFormat: 'yy-mm-dd' });
 	}
@@ -1037,12 +1060,6 @@ function enablebuttons(){
 		function(){
 			jQuery(this).hide();
 			jQuery('#image_settings_box').show('fast');
-		}
-	);
-	
-	jQuery("a.closeimagesettings").click(
-		function (e) {
-			jQuery("div#image_settings_box").hide();
 		}
 	);
 	

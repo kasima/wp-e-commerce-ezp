@@ -11,31 +11,19 @@ $nzshpcrt_gateways[$num]['submit_function'] = "submit_paypal_pro";
 $nzshpcrt_gateways[$num]['payment_type'] = "credit_card";
 
 if(in_array('paypal_pro',(array)get_option('custom_gateway_options'))) {
+	$curryear = date('Y');
+	
+	//generate year options
+	for($i=0; $i < 10; $i++){
+		$years .= "<option value='".$curryear."'>".$curryear."</option>\r\n";
+		$curryear++;
+	}
+ 
 	$gateway_checkout_form_fields[$nzshpcrt_gateways[$num]['internalname']] = "
-	<tr %s>
-		<td>Credit Card Number *</td>
-		<td>
-			<input type='text' value='' name='card_number' />
-			<p class='validation-error'>%s</p>
-		</td>
-	</tr>
-	<tr %s>
-		<td>Credit Card Expiry *</td>
-		<td>
-			<input type='text' size='2' value='' maxlength='2' name='expiry[month]' />/<input type='text' size='4'  maxlength='4' value='' name='expiry[year]' />
-			<p class='validation-error'>%s</p>
-		</td>
-	</tr>
-	<tr %s>
-		<td>CVV *</td>
-		<td><input type='text' size='4' value='' maxlength='4' name='card_code' />
-		<p class='validation-error'>%s</p>
-		</td>
-	</tr>
-	<tr %s>
-		<td>Card Type *</td>
-		<td>
-		<select name='cctype'>
+	<tr id='wpsc_pppro_cc_type' class='card_type' %s>
+		<td class='wpsc_pppro_cc_type1'>Card Type: *</td>
+		<td class='wpsc_pppro_cc_type2'>
+		<select class='wpsc_ccBox' name='cctype'>
 			<option value='Visa'>Visa</option>
 			<option value='Mastercard'>MasterCard</option>
 			<option value='Discover'>Discover</option>
@@ -44,8 +32,47 @@ if(in_array('paypal_pro',(array)get_option('custom_gateway_options'))) {
 		<p class='validation-error'>%s</p>
 		</td>
 	</tr>
+	<tr id='wpsc_pppro_cc_number' %s>
+		<td class='wpsc_pppro_cc_number1'>Card Number: *</td>
+		<td class='wpsc_pppro_cc_number2'>
+			<input type='text' value='' name='card_number' />
+			<p class='validation-error'>%s</p>
+		</td>
+	</tr>
+	<tr id='wpsc_pppro_cc_expiry' %s>
+		<td class='wpsc_pppro_cc_expiry1'>Expiry: *</td>
+		<td class='wpsc_pppro_cc_expiry2'>
+			<select class='wpsc_ccBox' name='expiry[month]'>
+			".$months."
+			<option value='01'>01</option>
+			<option value='02'>02</option>
+			<option value='03'>03</option>
+			<option value='04'>04</option>
+			<option value='05'>05</option>						
+			<option value='06'>06</option>						
+			<option value='07'>07</option>					
+			<option value='08'>08</option>						
+			<option value='09'>09</option>						
+			<option value='10'>10</option>						
+			<option value='11'>11</option>																			
+			<option value='12'>12</option>																			
+			</select>
+			<select class='wpsc_ccBox' name='expiry[year]'>
+			".$years."
+			</select>
+			<p class='validation-error'>%s</p>
+		</td>
+	</tr>
+	<tr id='wpsc_pppro_cc_code' class='card_cvv' %s>
+		<td class='wpsc_pppro_cc_code1'>CVV: *</td>
+		<td class='wpsc_pppro_cc_code2'><input type='text' size='4' value='' maxlength='4' name='card_code' />
+		<p class='validation-error'>%s</p>
+		</td>
+	</tr>
+
 ";
 }
+  
   
 function gateway_paypal_pro($seperator, $sessionid){
 	global $wpdb, $wpsc_cart;
@@ -66,7 +93,10 @@ function gateway_paypal_pro($seperator, $sessionid){
 	$data['PAYMENTACTION']			= "Sale";
 	$data['IPADDRESS']				= $_SERVER["REMOTE_ADDR"];
 	$data['RETURNFMFDETAILS']		= "1"; // optional - return fraud management filter data
-
+    
+    $sql = 'SELECT `code` FROM `'.WPSC_TABLE_CURRENCY_LIST.'` WHERE `id`='.get_option('currency_type');
+    $data['CURRENCYCODE'] = $wpdb->get_var($sql);
+    
 	foreach((array)$userinfo as $key => $value){
 		if(($value['unique_name']=='billingfirstname') && $value['value'] != ''){
 			$data['FIRSTNAME']	= $value['value'];
@@ -87,14 +117,23 @@ function gateway_paypal_pro($seperator, $sessionid){
 			$data['CITY']	= $value['value'];
 		}
 		if(($value['unique_name']=='billingstate') && $value['value'] != ''){
-			$sql = "SELECT `code` FROM `".WPSC_TABLE_REGION_TAX."` WHERE `name` ='".absint($value['value'])."' LIMIT 1";
+			$sql = "SELECT `code` FROM `".WPSC_TABLE_REGION_TAX."` WHERE `id` ='".$value['value']."' LIMIT 1";
 			$data['STATE'] = $wpdb->get_var($sql);
 		}else{
-			$data['STATE']='CA';
+			
+		//	$data['STATE']='CA';
 		}
 		if(($value['unique_name']=='billingcountry') && $value['value'] != ''){
-		
-			$data['COUNTRYCODE']	= $value['value'];
+			$value['value'] = maybe_unserialize($value['value']);
+			if($value['value'][0] == 'UK'){
+				$data['COUNTRYCODE'] = 'GB';
+			}else{
+				$data['COUNTRYCODE']	= $value['value'][0];
+			}
+			if(is_numeric($value['value'][1])){
+				$sql = "SELECT `code` FROM `".WPSC_TABLE_REGION_TAX."` WHERE `id` ='".$value['value'][1]."' LIMIT 1";
+				$data['STATE'] = $wpdb->get_var($sql);
+			}
 		}		
 		if(($value['unique_name']=='billingpostcode') && $value['value'] != ''){
 			$data['ZIP']	= $value['value'];
@@ -117,12 +156,26 @@ function gateway_paypal_pro($seperator, $sessionid){
 			//$data['SHIPTOCITY'] = 'CA';
 		if(($value['unique_name']=='shippingstate') && $value['value'] != ''){
 		//	$data['SHIPTOSTATE'] = $value['value'];
-			$sql = "SELECT `code` FROM `".WPSC_TABLE_REGION_TAX."` WHERE `name` ='".absint($value['value'])."' LIMIT 1";
+			$sql = "SELECT `code` FROM `".WPSC_TABLE_REGION_TAX."` WHERE `id` ='".$value['value']."' LIMIT 1";
 			$data['SHIPTOSTATE'] = $wpdb->get_var($sql);
 		}else{
 		}	
 		if(($value['unique_name']=='shippingcountry') && $value['value'] != ''){
-			$data['SHIPTOCOUNTRY']	= $value['value'];
+			$value['value'] = maybe_unserialize($value['value']);
+			if(is_array($value['value'])){
+			if($value['value'][0] == 'UK'){
+				$data['SHIPTOCOUNTRY'] = 'GB';
+			}else{
+				$data['SHIPTOCOUNTRY']	= $value['value'][0];
+			}
+			if(is_numeric($value['value'][1])){
+				$sql = "SELECT `code` FROM `".WPSC_TABLE_REGION_TAX."` WHERE `id` ='".$value['value'][1]."' LIMIT 1";
+				$data['SHIPTOSTATE'] = $wpdb->get_var($sql);
+			}
+			}else{
+				$data['SHIPTOCOUNTRY']	= $value['value'];
+			}
+			
 		}	
 		if(($value['unique_name']=='shippingpostcode') && $value['value'] != ''){
 			$data['SHIPTOZIP']	= $value['value'];
@@ -130,7 +183,7 @@ function gateway_paypal_pro($seperator, $sessionid){
 		//exit($key.' > '.print_r($value,true));
 	}
 	$data['SHIPTONAME'] = $data1['SHIPTONAME1'].' '.$data1['SHIPTONAME2'];
-
+//	exit('<pre>'.print_r($data, true).'</pre>');
 	if( ($data['SHIPTONAME'] == null) || ($data['SHIPTOSTREET'] == null) || ($data['SHIPTOCITY'] == null) ||
 			($data['SHIPTOSTATE'] == null) || ($data['SHIPTOCOUNTRY'] == null) || ($data['SHIPTOZIP'] == null)) {
 			// if any shipping details are empty, the order will simply fail, this deletes them all if one is empty
@@ -177,7 +230,7 @@ function gateway_paypal_pro($seperator, $sessionid){
 		$data['L_AMT'.$i]			= number_format($Item->unit_price,2);
 		$data['L_NUMBER'.$i]		= $i;
 		$data['L_QTY'.$i]			= $Item->quantity;
-		$data['L_TAXAMT'.$i]		= 0;//number_format($Item->tax,2);
+		//$data['L_TAXAMT'.$i]		= number_format($Item->tax,2);
 	}
 	}
 	$transaction = "";
@@ -194,7 +247,7 @@ function gateway_paypal_pro($seperator, $sessionid){
 	}
 //exit($transaction);
 	$response = send($transaction);
-//	exit('<pre>'.print_r($response, true).'</pre><pre>'.print_r($data, true).'</pre>');
+	//exit('<pre>'.print_r($response, true).'</pre><pre>'.print_r($data, true).'</pre>');
 	if($response->ack == 'Success' || $response->ack == 'SuccessWithWarning'){
 		//redirect to  transaction page and store in DB as a order with accepted payment
 		$sql = "UPDATE `".WPSC_TABLE_PURCHASE_LOGS."` SET `processed`= '2' WHERE `sessionid`=".$sessionid;
@@ -220,15 +273,12 @@ function gateway_paypal_pro($seperator, $sessionid){
 				}
 		}
 		if($paypal_account_error == true) {
-			$_SESSION['wpsc_checkout_misc_error_messages'][] = __('There is a problem with your PayPal account configuration, please contact PayPal for further information.', 'wpsc');
+			$_SESSION['wpsc_checkout_misc_error_messages'][] = __('There is a problem with your PayPal account configuration, please contact PayPal for further information.');
 			foreach($response->longerror as $paypal_error) {
 				$_SESSION['wpsc_checkout_misc_error_messages'][] = $paypal_error;
 			}
 		} else {
-			$_SESSION['wpsc_checkout_misc_error_messages'][] = __('Sorry your transaction did not go through to Paypal successfully, please correct any errors and try again.', 'wpsc');
-			foreach($response->longerror as $paypal_error) {
-				$_SESSION['wpsc_checkout_misc_error_messages'][] = $paypal_error;
-			}
+			$_SESSION['wpsc_checkout_misc_error_messages'][] = __('Sorry your transaction did not go through to Paypal successfully, please try again.');
 		}
 		$_SESSION['paypalpro'] = 'fail';
 	}
@@ -239,6 +289,7 @@ function send ($transaction) {
 	$connection = curl_init();
 	if (get_option('paypal_pro_testmode') == "on"){
 		curl_setopt($connection,CURLOPT_URL,"https://api-3t.sandbox.paypal.com/nvp"); // Sandbox testing
+//		exit('sandbox is true');
 	}else{
 		curl_setopt($connection,CURLOPT_URL,"https://api-3t.paypal.com/nvp"); // Live
 	}

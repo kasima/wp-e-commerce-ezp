@@ -77,7 +77,7 @@ class WP_Widget_Product_Categories extends WP_Widget {
 				$category_state = (bool)$instance['categorisation'][$cat_group['id']];
 				?>
 					<input type="checkbox" class="checkbox" id="<?php echo $this->get_field_id('categorisation')."-{$cat_group['id']}"; ?>" name="<?php echo $this->get_field_name('categorisation')."[{$cat_group['id']}]"; ?>"<?php checked($category_state); ?> />
-					<label for="<?php echo $this->get_field_id('categorisation')."-{$cat_group['id']}"; ?>"><?php echo str_replace(":category:",$cat_group['name'],TXT_WPSC_DISPLAY_THE_GROUP); ?></label><br />
+					<label for="<?php echo $this->get_field_id('categorisation')."-{$cat_group['id']}"; ?>"><?php echo str_replace(":category:",$cat_group['name'],__('Display the :category: Group', 'wpsc')); ?></label><br />
 				<?php
 			}
 			?>

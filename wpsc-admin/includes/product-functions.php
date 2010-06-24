@@ -26,13 +26,13 @@ function wpsc_check_memory_limit() {
 		
 		// build the test sizes
 		$sizes = array();
-		$sizes[] = array ( 'width' => 800, 'height' => 600);
-		$sizes[] = array ( 'width' => 1024, 'height' => 768);
-		$sizes[] = array ( 'width' => 1280, 'height' => 960);  // 1MP	
-		$sizes[] = array ( 'width' => 1600, 'height' => 1200); // 2MP
-		$sizes[] = array ( 'width' => 2016, 'height' => 1512); // 3MP
-		$sizes[] = array ( 'width' => 2272, 'height' => 1704); // 4MP
-		$sizes[] = array ( 'width' => 2560, 'height' => 1920); // 5MP
+		$sizes[] = array ( 'width' => 800, 'height' => 600 );
+		$sizes[] = array ( 'width' => 1024, 'height' => 768 );
+		$sizes[] = array ( 'width' => 1280, 'height' => 960 );  // 1MP	
+		$sizes[] = array ( 'width' => 1600, 'height' => 1200 ); // 2MP
+		$sizes[] = array ( 'width' => 2016, 'height' => 1512 ); // 3MP
+		$sizes[] = array ( 'width' => 2272, 'height' => 1704 ); // 4MP
+		$sizes[] = array ( 'width' => 2560, 'height' => 1920 ); // 5MP
 		
 		// test the classic sizes
 		foreach ($sizes as $size){
@@ -71,7 +71,7 @@ function wpsc_admin_submit_product() {
 		$sendback = add_query_arg('message', 1, $sendback);
   //exit('<pre>'.print_r($sendback,true).'</pre>');
 		wp_redirect($sendback);
-  }else{
+  } else {
   	$_SESSION['product_error_messages'] = array();	
   	if($post_data['title'] == ''){
   		$_SESSION['product_error_messages'][] = __('<strong>ERROR</strong>: Please enter a Product name.<br />');
@@ -111,7 +111,8 @@ function wpsc_sanitise_product_forms($post_data = null) {
 	$post_data['donation'] = (int)(bool)$post_data['donation'];
 	$post_data['no_shipping'] = (int)(bool)$post_data['no_shipping'];
 	$post_data['publish'] = (int)(bool)$post_data['publish']; 
-	
+	$post_data['meta']['unpublish_oos'] = (int)(bool)$post_data['inform_when_oos'];
+
 	$post_data['price'] = (float)$post_data['price'];
 	if(is_numeric($post_data['special_price'])) {
 		$post_data['special_price'] = (float)($post_data['price'] - $post_data['special_price']);
@@ -128,9 +129,9 @@ function wpsc_sanitise_product_forms($post_data = null) {
 	if($post_data['table_rate_price'] != 1) {
 		$post_data['meta']['table_rate_price'] = null;
 	}
-	
-	$post_data['files'] = $_FILES;
 
+	$post_data['files'] = $_FILES;
+//exit('<pre>'.print_r($post_data, true).'</pre><pre>'.print_r($_POST, true).'</pre>');
   //exit('<pre>'.print_r($post_data, true).'</pre>');
   return $post_data;
 }
@@ -176,6 +177,7 @@ function wpsc_insert_product($post_data, $wpsc_error = false) {
 		'thumbnail_state' => null
   );
   
+
   foreach($product_columns as $column => $default) {
     if(isset($post_data[$column]) || ($post_data[$column] !== null) ) {
 			$update_values[$column] = stripslashes($post_data[$column]);
@@ -249,9 +251,7 @@ function wpsc_insert_product($post_data, $wpsc_error = false) {
 
 	// and the images
 	wpsc_update_product_images($product_id, $post_data);
-
-	//exit('<pre>'.print_r($post_data, true).'</pre>');
-
+	
 	//and the alt currency
 	foreach((array)$post_data['newCurrency'] as $key =>$value){
 		wpsc_update_alt_product_currency($product_id, $value, $post_data['newCurrPrice'][$key]);
@@ -263,7 +263,7 @@ function wpsc_insert_product($post_data, $wpsc_error = false) {
 	  wpsc_item_reassign_file($product_id, $post_data['select_product_file']);
 	}
 	
-	
+	//exit('<pre>'.print_r($post_data, true).'</pre>');
 	if($post_data['files']['preview_file']['tmp_name'] != '') {
  		wpsc_item_add_preview_file($product_id, $post_data['files']['preview_file']);
 	}
@@ -520,27 +520,20 @@ function wpsc_update_product_images($product_id, $post_data) {
 	/* Handle new image uploads here */
   if($post_data['files']['image']['tmp_name'] != '') {
 		$image = wpsc_item_process_image($product_id, $post_data['files']['image']['tmp_name'], str_replace(" ", "_", $post_data['files']['image']['name']), $post_data['width'], $post_data['height'], $post_data['image_resize']);
+		
 		$image_action = absint($post_data['image_resize']);
 		$image_width = $post_data['width'];
 		$image_height = $post_data['height'];
+	
 	} else {
 		$image_action = absint($post_data['gallery_resize']);
 		$image_width = $post_data['gallery_width'];
 		$image_height = $post_data['gallery_height'];
-	}
-	$uploaded_image = null;
-	if($image_action == 3) {
-		if(file_exists($_FILES['gallery_thumbnailImage']['tmp_name'])) {
-			$uploaded_image =  $_FILES['gallery_thumbnailImage']['tmp_name'];
-		} else if(file_exists($_FILES['thumbnailImage']['tmp_name'])) {
-			$uploaded_image =  $_FILES['thumbnailImage']['tmp_name'];
-		} else {
-			$image_action = 0;
-		}
+		
 	}
 	
 //    exit( "<pre>".print_r($image_action, true)."</pre>");
-	wpsc_resize_image_thumbnail($product_id, $image_action, $image_width, $image_height, $uploaded_image);
+	wpsc_resize_image_thumbnail($product_id, $image_action, $image_width, $image_height);
  	//exit( " <pre>".print_r($post_data, true)."</pre>");
 	
 	
@@ -559,9 +552,6 @@ function wpsc_update_product_images($product_id, $post_data) {
  */
 function wpsc_resize_image_thumbnail($product_id, $image_action= 0, $width = 0, $height = 0, $custom_image = null) {
   global $wpdb;
-
-	//exit("<pre>".print_r(func_get_args(), true)."</pre>");
-  
 	$image_id = $wpdb->get_var("SELECT `image` FROM `".WPSC_TABLE_PRODUCT_LIST."` WHERE `id` = '{$product_id}' LIMIT 1");
 	$image = $wpdb->get_var("SELECT `image` FROM `".WPSC_TABLE_PRODUCT_IMAGES."` WHERE `id` = '{$image_id}' LIMIT 1");
 	
@@ -606,30 +596,38 @@ function wpsc_resize_image_thumbnail($product_id, $image_action= 0, $width = 0, 
 				break;
 				
 				case 3:
-					$custom_image_name = '';
-				  if($custom_image !== null) {
-						if(move_uploaded_file($custom_image, WPSC_THUMBNAIL_DIR.$image)) {
-							$custom_image_name = $wpdb->escape(basename($image));
-							$image_input = WPSC_THUMBNAIL_DIR.$image;
-							if(function_exists('getimagesize')) {
-								$imagedata = getimagesize($image_input);
-								update_product_meta($product_id, 'thumbnail_width', (int)$imagedata[0]);
-								update_product_meta($product_id, 'thumbnail_height', (int)$imagedata[1]);
-							}
-						}
+				  // replacing the thumbnail with a custom image is done here
+				  $uploaded_image = null;
+				    //exit($uploaded_image);
+				   if(file_exists($_FILES['gallery_thumbnailImage']['tmp_name'])) {
+						$uploaded_image =  $_FILES['gallery_thumbnailImage']['tmp_name'];
+				   } else if(file_exists($_FILES['thumbnailImage']['tmp_name'])) {
+						$uploaded_image =  $_FILES['thumbnailImage']['tmp_name'];
+				   }
+				  if($uploaded_image !== null) {
+				  		$image = uniqid().$image;
+						move_uploaded_file($uploaded_image, WPSC_THUMBNAIL_DIR.$image);
+				    //exit($uploaded_image);
+				  
 				  }
 				break;
 			}
 			
 			if(!file_exists(WPSC_IMAGE_DIR.$image)) {
-				$wpdb->query("INSERT INTO `".WPSC_TABLE_PRODUCT_IMAGES."` SET `thumbnail_state` = '$image_action' WHERE `id`='{$product_id}' LIMIT 1");
+				//$wpdb->query("INSERT INTO `".WPSC_TABLE_PRODUCT_IMAGES."` SET `thumbnail_state` = '$image_action' WHERE `id`='{$product_id}' LIMIT 1");
+				if($image_action != 3){
 				$sql = "INSERT INTO `".WPSC_TABLE_PRODUCT_IMAGES."` (`product_id`, `image`, `width`, `height`) VALUES ('{$product_id}', '{$image}', '{$width}', '{$height}' )";
 				$wpdb->query($sql);	
-				$image_id = (int) $wpdb->insert_id;
+				
+					$image_id = (int) $wpdb->insert_id;
+				}
+			}
+			if($image_action != 3){
+				$sql="UPDATE `".WPSC_TABLE_PRODUCT_LIST."` SET `thumbnail_state` = '$image_action', `image` ='{$image_id}' WHERE `id`='{$product_id}' LIMIT 1";
+			}else{
+	$sql="UPDATE `".WPSC_TABLE_PRODUCT_LIST."` SET `thumbnail_state` = '$image_action', `image` ='{$image_id}',`thumbnail_image`='{$image}' WHERE `id`='{$product_id}' LIMIT 1";
 			}
 			
-			$sql="UPDATE `".WPSC_TABLE_PRODUCT_LIST."` SET `thumbnail_state` = '$image_action', `image` = '{$image_id}', `thumbnail_image` = '{$custom_image_name}'  WHERE `id`='{$product_id}' LIMIT 1";
-			//exit($sql);
 			$wpdb->query($sql);
 		} else {
 			//if it is not, we need to unset the associated image
@@ -756,50 +754,56 @@ function wpsc_item_process_file($product_id, $submitted_file, $preview_file = nu
 		return false;
   }
 }
-
  /**
  * wpsc_item_reassign_file function 
  *
  * @param integer product ID
  * @param string the selected file name;
  */
-function wpsc_item_reassign_file($product_id, $selected_file) {
+function wpsc_item_reassign_file($product_id, $selected_files) {
   global $wpdb;
+  $product_file_list=array();
 	// initialise $idhash to null to prevent issues with undefined variables and error logs
 	$idhash = null;
 	/* if we are editing, grab the current file and ID hash */ 
-	if($selected_file == '.none.') {
+	if(!$selected_files) {
 		// unlikely that anyone will ever upload a file called .none., so its the value used to signify clearing the product association
 		$wpdb->query("UPDATE `".WPSC_TABLE_PRODUCT_LIST."` SET `file` = '0' WHERE `id` = '$product_id' LIMIT 1");
 		return null;
 	}
-	
-	// if we already use this file, there is no point doing anything more.
-	$current_fileid = $wpdb->get_var("SELECT `file` FROM `".WPSC_TABLE_PRODUCT_LIST."` WHERE `id` = '$product_id' LIMIT 1");
-	if($current_fileid > 0) {
-		$current_file_data = $wpdb->get_row("SELECT `id`,`idhash` FROM `".WPSC_TABLE_PRODUCT_FILES."` WHERE `id` = '$current_fileid' LIMIT 1",ARRAY_A);
-		if(basename($selected_file) == $file_data['idhash']) {
-			return $current_fileid;
+	foreach($selected_files as $selected_file) {
+		// if we already use this file, there is no point doing anything more.
+		$current_fileid = $wpdb->get_var("SELECT `file` FROM `".WPSC_TABLE_PRODUCT_LIST."` WHERE `id` = '$product_id' LIMIT 1");
+		if($current_fileid > 0) {
+			$current_file_data = $wpdb->get_row("SELECT `id`,`idhash` FROM `".WPSC_TABLE_PRODUCT_FILES."` WHERE `id` = '$current_fileid' LIMIT 1",ARRAY_A);
+			if(basename($selected_file) == $file_data['idhash']) {
+				//$product_file_list[] = $current_fileid;
+				//return $current_fileid;
+			}
 		}
-	}
-
-	
-	$selected_file = basename($selected_file);
-	if(file_exists(WPSC_FILE_DIR.$selected_file)) {
-		$timestamp = time();
-		$file_data = $wpdb->get_row("SELECT * FROM `".WPSC_TABLE_PRODUCT_FILES."` WHERE `idhash` IN('".$wpdb->escape($selected_file)."') LIMIT 1", ARRAY_A);
-		$fileid = (int)$file_data['id'];
-		// if the file does not have a database row, add one.
-		if($fileid < 1) {
-		  $mimetype = wpsc_get_mimetype(WPSC_FILE_DIR.$selected_file);
-		  $filename = $idhash = $selected_file;
+		
+		$selected_file = basename($selected_file);
+		if(file_exists(WPSC_FILE_DIR.$selected_file)) {
 			$timestamp = time();
-			$wpdb->query("INSERT INTO `".WPSC_TABLE_PRODUCT_FILES."` (`product_id`, `filename`  , `mimetype` , `idhash` , `date` ) VALUES ('{$product_id}', '{$filename}', '{$mimetype}', '{$idhash}', '{$timestamp}');");
-			$fileid = $wpdb->get_var("SELECT `id` FROM `".WPSC_TABLE_PRODUCT_FILES."` WHERE `date` = '{$timestamp}' AND `filename` IN ('{$filename}')");
-		}
-		// update the entry in the product table
-		$wpdb->query("UPDATE `".WPSC_TABLE_PRODUCT_LIST."` SET `file` = '$fileid' WHERE `id` = '$product_id' LIMIT 1");
-	}	
+			$file_data = $wpdb->get_row("SELECT * FROM `".WPSC_TABLE_PRODUCT_FILES."` WHERE `idhash` IN('".$wpdb->escape($selected_file)."') LIMIT 1", ARRAY_A);
+			$fileid = (int)$file_data['id'];
+			// if the file does not have a database row, add one.
+			if($fileid < 1) {
+				$mimetype = wpsc_get_mimetype(WPSC_FILE_DIR.$selected_file);
+				$filename = $idhash = $selected_file;
+				$timestamp = time();
+				$wpdb->query("INSERT INTO `".WPSC_TABLE_PRODUCT_FILES."` (`product_id`, `filename`  , `mimetype` , `idhash` , `date` ) VALUES ('{$product_id}', '{$filename}', '{$mimetype}', '{$idhash}', '{$timestamp}');");
+				$fileid = $wpdb->get_var("SELECT `id` FROM `".WPSC_TABLE_PRODUCT_FILES."` WHERE `date` = '{$timestamp}' AND `filename` IN ('{$filename}')");
+			}
+			// update the entry in the product table
+			$wpdb->query("UPDATE `".WPSC_TABLE_PRODUCT_LIST."` SET `file` = '$fileid' WHERE `id` = '$product_id' LIMIT 1");
+			$product_file_list[] = $fileid;
+		}	
+  }
+
+  
+	//exit('<pre>'.print_r($product_file_list, true).'</pre>');
+  update_product_meta($product_id, 'product_files', $product_file_list);
 	return $fileid;
 }
 
@@ -839,25 +843,8 @@ function wpsc_item_add_preview_file($product_id, $preview_file) {
 		//exit("<pre>".print_r($preview_file,true)."</pre>");
 		return $fileid;
    } else {
- 		return false;
-   }
-   
+ 		return $selected_files;
+   }  
 }
-
-
-function wpsc_send_to_google_base($product_data) {
-	require_once('google_base_functions.php');
-	if (strlen(get_option('wpsc_google_base_token')) > 0) {
-	  $token = get_option('wpsc_google_base_token');
-// 		if (isset($_SESSION['google_base_sessionToken'])) {
-// 			$sessionToken = $_SESSION['google_base_sessionToken'];
-// 		} else {
-			$sessionToken = exchangeToken($token);
-// 			$_SESSION['google_base_sessionToken'] = $sessionToken;
-// 		}
-		postItem($product_data['name'], $product_data['price'], $product_data['description'], $sessionToken);
-	}
-}
-
 
 ?>

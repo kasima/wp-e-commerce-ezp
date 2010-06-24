@@ -28,7 +28,7 @@ if (is_array($GLOBALS['nzshpcrt_gateways'])) {
 		$gatewaylist .="<option $disabled value='".$gateway['internalname']."' ".$selected." >".$gateway['name']."</option>";
 	}
 }
-$gatewaylist = "<option value='".$nogw."'>".TXT_WPSC_PLEASESELECTAPAYMENTGATEWAY."</option>" . $gatewaylist;
+$gatewaylist = "<option value='".$nogw."'>".__('Please Select A Payment Gateway', 'wpsc')."</option>" . $gatewaylist;
 
 ?>
 		
@@ -52,7 +52,7 @@ function selectgateway() {
 				$custom_gateway2 = 'checked="checked"';
 			}
 		?>
-		  <h2><?php echo TXT_WPSC_GATEWAY_OPTIONS;?></h2>
+		  <h2><?php echo __('Gateway Options', 'wpsc');?></h2>
   		<?php 
 		/* wpsc_setting_page_update_notification displays the wordpress styled notifications */
 		wpsc_settings_page_update_notification(); ?>
@@ -61,15 +61,15 @@ function selectgateway() {
 				<td class='select_gateway'>
 			<?php if (IS_WP27) { ?>
 				<div class='postbox'>
-				<h3 class='hndle'><?=TXT_WPSC_OPTIONS_GENERAL_HEADER?></h3>
+				<h3 class='hndle'><?php _e('General Settings', 'wpsc'); ?></h3>
 				<div class='inside'>
 			<?php } else { ?>
 					<div class="categorisation_title">
-					  <strong class="form_group"><?php echo TXT_WPSC_PAYMENT_GATEWAYS; ?></strong>
+					  <strong class="form_group"><?php echo __('Payment Gateways', 'wpsc'); ?></strong>
 					</div>
 			<?php }	?>
 					
-				  <p><?php echo TXT_WPSC_CHOOSE_PAYMENT_GATEWAYS; ?></p>
+				  <p><?php echo __('Activate the payment gateways that you want to make available to your customers by selecting them below.', 'wpsc'); ?></p>
 				  <br />
 					<?php
 					$selected_gateways = get_option('custom_gateway_options');
@@ -89,13 +89,13 @@ function selectgateway() {
 					?>
 						<div class='submit gateway_settings'>
 							<input type='hidden' value='true' name='update_gateways' />
-							<input type='submit' value='<?php echo TXT_WPSC_UPDATE_BUTTON?>' name='updateoption' />
+							<input type='submit' value='<?php echo __('Update &raquo;', 'wpsc')?>' name='updateoption' />
 						</div>	
 				<?php if (IS_WP27){ ?>
 				</div>
 				</div>
 				<?php } ?>		
-				<h4><?php echo TXT_WPSC_WE_RECOMMEND; ?></h4>
+				<h4><?php echo __('We Recommend', 'wpsc'); ?></h4>
 						<a style="border-bottom:none;" href="https://www.paypal.com/nz/mrb/pal=LENKCHY6CU2VY" target="_blank"><img src="<?php echo WPSC_URL; ?>/images/paypal-referal.gif" border="0" alt="Sign up for PayPal and start accepting credit card payments instantly." /></a> <br /><br />
 						<a style="border-bottom:none;" href="http://checkout.google.com/sell/?promo=seinstinct" target="_blank"><img src="https://checkout.google.com/buyer/images/google_checkout.gif" border="0" alt="Sign up for Google Checkout" /></a>
 
@@ -104,14 +104,14 @@ function selectgateway() {
 				<td class='gateway_settings' rowspan='2'>										
 					<?php if (IS_WP27) { ?>
 						<div class='postbox'>
-						<h3 class='hndle'><?=TXT_WPSC_CONFIGURE_PAYMENT_GATEWAY?></h3>
+						<h3 class='hndle'><?=__(' Select a Payment Gateway below to configure it.', 'wpsc')?></h3>
 						<div  class='inside'>
 						<table class='form-table'>
 					<?php } else { ?>					
 					<table class='form-table'>
 					<tr class="firstrowth">
 					  <td colspan='2' style='border-bottom: none;'>
-					    <strong class="form_group"><?php echo TXT_WPSC_CONFIGURE_PAYMENT_GATEWAY;?></strong>
+					    <strong class="form_group"><?php echo __(' Select a Payment Gateway below to configure it.', 'wpsc');?></strong>
 					  </td>
 					</tr>
 					<?php 
@@ -119,7 +119,7 @@ function selectgateway() {
 					?>
 					<tr>
 					  <td class='wpsc_gateway_table'>
-							<h4><?php echo TXT_WPSC_PAYMENTGATEWAY2;?></h4>
+							<h4><?php echo __('Payment Gateway', 'wpsc');?></h4>
 					  </td>
 					  <td style='border-top: none;'>
 							<select name='payment_gw' onchange='selectgateway();'>
@@ -169,7 +169,7 @@ function selectgateway() {
 						<td colspan='2'>
 							<div class='submit'>
 								<?php wp_nonce_field('update-options', 'wpsc-update-options'); ?>
-								<input type='submit' value='<?php echo TXT_WPSC_UPDATE_BUTTON?>' name='updateoption' />
+								<input type='submit' value='<?php echo __('Update &raquo;', 'wpsc')?>' name='updateoption' />
 							</div>
 						</td>
 					</tr>

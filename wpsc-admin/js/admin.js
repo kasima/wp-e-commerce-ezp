@@ -1,22 +1,95 @@
 // This is the wp-e-commerce front end javascript "library"
 
 jQuery(document).ready( function () {
-  //js for hide/show 'resize existing thumbnails link on presentation settings page
-  jQuery('.wpsc_prod_thumb_option').livequery(function(){
+
+	jQuery('.wpsc_prod_thumb_option').livequery(function(){
 	  jQuery(this).focus(function(){
 	 	jQuery('.wpsc_mass_resize').css('visibility', 'visible');
 	  });
-  });
+	});
+	
     jQuery('.wpsc_prod_thumb_option').livequery(function(){
 	  jQuery(this).blur(function(){
-	 	jQuery('.wpsc_mass_resize').css('visibility', 'hidden');
+	  
+//	  	if(jQuery('.wpsc_mass_resize').css('visibility') != 'hidden')
+//	 	jQuery('.wpsc_mass_resize').css('visibility', 'hidden');
 	  });
+	});
+
+
+	//Delete checkout options on settings>checkout page
+	jQuery('.wpsc_delete_option').livequery(function(){
+		jQuery(this).click(function(event){
+			jQuery(this).parent().parent('tr').remove();
+			event.preventDefault();
+		});
+	
+	});
+	//Changing the checkout fields page
+	jQuery('#wpsc_checkout_sets').livequery(function(){
+		jQuery(this).change(function(){
+
+		});
+	
+	});
+  //checkboxes on checkout page 
+/*
+  jQuery('.wpsc_checkout_selectboxes').livequery(function(){
+   	jQuery(this).change(function(){  				
+			if(jQuery(this).val() == 'checkbox' || jQuery(this).val() == 'radio' ||
+			jQuery(this).val() == 'select'){
+				id = jQuery(this).attr('name');
+				id = id.replace('form_type', '');
+				output =  "<tr class='wpsc_grey'><td></td><td colspan='5'>Please save your changes to add options to this "+jQuery(this).val()+" form field.</td></tr>\r\n";
+				jQuery(this).parent().parent('tr').after(output);
+			}
+		
+	});
   });
-  //grid view checkbox ajax to deselect show images only when other checkboxes are selected
+*/
+	jQuery('.wpsc_add_new_checkout_option').livequery(function(){
+		jQuery(this).click(function(event){
+			form_id = jQuery(this).attr('title');	
+			id = form_id.replace('form_options', '');
+			output = "<tr class='wpsc_grey'><td></td><td><input type='text' value='' name='wpsc_checkout_option_label"+id+"[]' /></td><td colspan='4'><input type='text' value='' name='wpsc_checkout_option_value"+id+"[]' />&nbsp;<a class='wpsc_delete_option' href='' ><img src='"+WPSC_URL+"/images/trash.gif' alt='"+TXT_WPSC_DELETE+"' title='"+TXT_WPSC_DELETE+"' /></a></td></tr>";
+			jQuery(this).parent().parent('tr').after(output);
+  			event.preventDefault();
+		});
+	
+	});
+
+
+	jQuery('.wpsc_edit_checkout_options').livequery(function(){
+		jQuery(this).click(function(event){
+				if(!jQuery(this).hasClass('triggered')){
+					jQuery(this).addClass('triggered');
+					id = jQuery(this).attr('rel');
+					id = id.replace('form_options[', '');
+					id = id.replace(']', '');
+					post_values = "form_id="+id;
+					jQuery.post('index.php?wpsc_admin_action=check_form_options',post_values, function(returned_data){
+						if(returned_data != ''){
+							jQuery('#checkout_'+id).after(returned_data);
+						}else{
+					output =  "<tr class='wpsc_grey'><td></td><td colspan='5'>Please Save your changes before trying to Order your Checkout Forms again.</td></tr>\r\n<tr  class='wpsc_grey'><td></td><th>Label</th><th >Value</th><td colspan='3'><a href=''  class='wpsc_add_new_checkout_option'  title='form_options"+id+"'>+ New Layer</a></td></tr>";
+					output += "<tr class='wpsc_grey'><td></td><td><input type='text' value='' name='wpsc_checkout_option_label["+id+"][]' /></td><td colspan='4'><input type='text' value='' name='wpsc_checkout_option_value["+id+"][]' /><a class='wpsc_delete_option' href='' ><img src='"+WPSC_URL+"/images/trash.gif' alt='Delete' title='delete' /></a></td></tr>";
+					jQuery('#checkout_'+id).after(output);
+					
+					}
+				
+					});
+					jQuery('table#wpsc_checkout_list').sortable('disable');
+				}
+		event.preventDefault();
+		});
+	
+	
+	});
+   
+   //grid view checkbox ajax to deselect show images only when other checkboxes are selected
   jQuery('#show_images_only').livequery(function(){
 	jQuery(this).click(function(){
 		imagesonly = jQuery(this).is(':checked');
-
 		if(imagesonly){
 			jQuery('#display_variations').attr('checked', false);
 			jQuery('#display_description').attr('checked', false);
@@ -104,7 +177,6 @@ jQuery(document).ready( function () {
   jQuery('table#wpsc_product_list').sortable({
 		update: function(event, ui) {
 			category_id = jQuery('input#products_page_category_id').val();
-			
 			product_order = jQuery('table#wpsc_product_list').sortable( 'serialize');
 			post_values = "category_id="+category_id+"&"+product_order;
 			jQuery.post( 'index.php?wpsc_admin_action=save_product_order', post_values, function(returned_data) { });
@@ -114,6 +186,29 @@ jQuery(document).ready( function () {
     containment: 'table#wpsc_product_list',
     placeholder: 'product-placeholder'
   });
+  
+  jQuery('table#wpsc_checkout_list').livequery(function(event){
+   //this makes the checkout form fields sortable
+	  jQuery(this).sortable({
+		
+	    items: 'tr.checkout_form_field',
+	    axis: 'y',
+	    containment: 'table#wpsc_checkout_list',
+	    placeholder: 'checkout-placeholder',
+	    handle: '.drag'
+    	
+	  }); 
+	  jQuery(this).bind('sortupdate', function(event, ui) {
+	  	
+		//post_values = jQuery(this).sortable();
+		//post_values = "category_id="+category_id+"&"+checkout_order;
+		post_values = jQuery( 'table#wpsc_checkout_list').sortable( 'serialize');
+		jQuery.post( 'index.php?wpsc_admin_action=save_checkout_order', post_values, function(returned_data) { });
+	  });
+
+  }); 
+  
+	  
 	// this helps show the links in the product list table, it is partially done using CSS, but that breaks in IE6
 	jQuery("tr.product-edit").hover(
 		function() {
@@ -290,7 +385,7 @@ jQuery(document).ready( function () {
 	}); 
 	
 	jQuery('a.add_variation_item_form').livequery(function(){
-	  jQuery(this).click( function() {
+	  jQuery(this).click(function() {
 			form_field_container = jQuery(this).siblings('#variation_values');
 			form_field = jQuery("div.variation_value", form_field_container).eq(0).clone();
 			
@@ -336,9 +431,28 @@ jQuery(document).ready( function () {
 				} else {
 					jQuery('a.togbox',this).html('&ndash;');
 				}
-				wpsc_save_postboxes_state('products_page_wpsc-edit-products', '#poststuff');
+				wpsc_save_postboxes_state('store_page_wpsc-edit-products', '#poststuff');
 		});		
 	});
+ 	jQuery('#dashboard-widgets .postbox h3').livequery(function(){
+	  jQuery(this).click( function() {
+			jQuery(jQuery(this).parent('div.postbox')).toggleClass('closed');
+				if(jQuery(jQuery(this).parent('div.postbox')).hasClass('closed')) {
+					jQuery('a.togbox',this).html('+');
+				} else {
+					jQuery('a.togbox',this).html('&ndash;');
+				}
+				wpsc_save_postboxes_state('store_page_wpsc-sale-logs', '#dashboard-widgets-main-content-wpsc');
+		});		
+	});
+ 
+
+	jQuery('a.add_new_form_set').livequery(function(){
+	  jQuery(this).click( function() {
+			jQuery(".add_new_form_set_forms").toggle();
+		});		
+	});
+
 
 	jQuery("#add-product-image").click(function(){
 		swfu.selectFiles();
@@ -358,11 +472,10 @@ jQuery(document).ready( function () {
 					postboxes.pbhide( box );
 				}
 			}
-			postboxes.save_state('products_page_wpsc-edit-products');
+			postboxes.save_state('store_page_wpsc-edit-products');
 		});
 	});
-	
-	
+		
 	// postbox sorting
 	jQuery('.meta-box-sortables').livequery(function(){
 	  jQuery(this).sortable({
@@ -426,7 +539,7 @@ jQuery(document).ready( function () {
 	  });
 	});
 
-	jQuery('a.closeimagesettings').livequery(function(){
+	jQuery('.closeimagesettings').livequery(function(){
 	  jQuery(this).click( function() {
 				jQuery('.image_settings_box').hide();
 	  });
@@ -744,9 +857,9 @@ function hideOptionElement(id, option) {
 
 
 function wpsc_save_postboxes_state(page, container) {
-  //console.log(container);
+//  console.log(container);
 	var closed = jQuery(container+' .postbox').filter('.closed').map(function() { return this.id; }).get().join(',');
-	jQuery.post(postboxL10n.requestFile, {
+	jQuery.post(ajaxurl, {
 		action: 'closed-postboxes',
 		closed: closed,
 		closedpostboxesnonce: jQuery('#closedpostboxesnonce').val(),
@@ -829,31 +942,31 @@ function add_form_field() {
   new_element_id = "form_id_"+new_element_number;
   
   new_element_contents = "";
-  new_element_contents += " <table><tr>\n\r";
+  //new_element_contents += "<tr class='checkout_form_field' >\n\r";
+  new_element_contents += "<td class='drag'></td>";
   new_element_contents += "<td class='namecol'><input type='text' name='new_form_name["+new_element_number+"]' value='' /></td>\n\r";
-  new_element_contents += "<td class='typecol'><select name='new_form_type["+new_element_number+"]'>"+HTML_FORM_FIELD_TYPES+"</select></td>\n\r"; 
+  new_element_contents += "<td class='typecol'><select class='wpsc_checkout_selectboxes' name='new_form_type["+new_element_number+"]'>"+HTML_FORM_FIELD_TYPES+"</select></td>\n\r"; 
+   new_element_contents += "<td class='typecol'><select name='new_form_unique_name["+new_element_number+"]'>"+HTML_FORM_FIELD_UNIQUE_NAMES+"</select></td>\n\r"; 
   new_element_contents += "<td class='mandatorycol' style='text-align: center;'><input type='checkbox' name='new_form_mandatory["+new_element_number+"]' value='1' /></td>\n\r";
-  new_element_contents += "<td class='logdisplaycol' style='text-align: center;'><input type='checkbox' name='new_form_display_log["+new_element_number+"]' value='1' /></td>\n\r";
-  new_element_contents += "<td class='ordercol'><input type='text' size='3' name='new_form_order["+new_element_number+"]' value='' /></td>\n\r";
-  new_element_contents += "<td  style='text-align: center; width: 12px;'><a class='image_link' href='#' onclick='return remove_new_form_field(\""+new_element_id+"\");'><img src='"+WPSC_URL+"/images/trash.gif' alt='"+TXT_WPSC_DELETE+"' title='"+TXT_WPSC_DELETE+"' /></a></td>\n\r";
-  new_element_contents += "<td></td>\n\r";
-  new_element_contents += "</tr></table>";
+   new_element_contents += "<td><a class='image_link' href='#' onclick='return remove_new_form_field(\""+new_element_id+"\");'><img src='"+WPSC_URL+"/images/trash.gif' alt='"+TXT_WPSC_DELETE+"' title='"+TXT_WPSC_DELETE+"' /></a></td>\n\r";
+ // new_element_contents += "</tr>";
   
-  new_element = document.createElement('div');
+  new_element = document.createElement('tr');
   new_element.id = new_element_id;
-   
-  document.getElementById("form_field_form_container").appendChild(new_element);
-  document.getElementById(new_element_id).innerHTML = new_element_contents;
+  document.getElementById("wpsc_checkout_list_body").appendChild(new_element);
+  //document.getElementById(new_element_id).innerHTML = new_element_contents;
+  jQuery('#'+new_element_id).append(new_element_contents);
+  jQuery('#'+new_element_id).addClass('checkout_form_field');
   return false;
 }
 
 
   
 function remove_new_form_field(id) {
-  element_count = document.getElementById("form_field_form_container").childNodes.length;
+  element_count = document.getElementById("wpsc_checkout_list_body").childNodes.length;
   if(element_count > 1) {
     target_element = document.getElementById(id);
-    document.getElementById("form_field_form_container").removeChild(target_element);
+    document.getElementById("wpsc_checkout_list_body").removeChild(target_element);
   }
   return false;
 }
@@ -870,11 +983,11 @@ function getcurrency(id) {
 //delete checkout fields from checkout settings page
 function remove_form_field(id,form_id) {
   var delete_variation_value=function(results) { }
-  element_count = document.getElementById("form_field_form_container").childNodes.length;
+  element_count = document.getElementById("wpsc_checkout_list_body").childNodes.length;
   if(element_count > 1) {
     ajax.post("index.php",delete_variation_value,"admin=true&ajax=true&remove_form_field=true&form_id="+form_id);
     target_element = document.getElementById(id);
-    document.getElementById("form_field_form_container").removeChild(target_element);
+    document.getElementById("wpsc_checkout_list_body").removeChild(target_element);
   }
   return false;
 } 
@@ -909,7 +1022,6 @@ function hideelement1(id, item_value) {
 	}
 }
 
-
 function toggle_display_options(state) {
   switch(state) {
     case 'list':
@@ -928,3 +1040,5 @@ function toggle_display_options(state) {
     break;
   }
 }
+
+

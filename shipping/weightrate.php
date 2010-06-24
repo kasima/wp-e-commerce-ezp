@@ -27,12 +27,12 @@ class weightrate {
 	
 	function getForm() {
 	//	$output ="<table>";
-		$output.="<tr><th>".TXT_WPSC_TOTAL_WEIGHT_IN_POUNDS."</th><th>".TXT_WPSC_SHIPPING_PRICE."</th></tr>";
+		$output.="<tr><th>".__('Total weight <br />(<abbr alt="You must enter the weight here in pounds, regardless of what you used on your products" title="You must enter the weight here in pounds, regardless of what you used on your products">in Pounds</abbr>)', 'wpsc')."</th><th>".__('Shipping Price', 'wpsc')."</th></tr>";
 		$layers = get_option("weight_rate_layers");
 		if ($layers != '') {
 			foreach($layers as $key => $shipping) {
 				$output.="<tr class='rate_row'><td >";
-				$output .="<i style='color: grey;'>".TXT_WPSC_IF_WEIGHT_IS."</i><input type='text' value='$key' name='weight_layer[]'size='4'><i style='color: grey;'>".TXT_WPSC_AND_ABOVE."</i></td><td>".wpsc_get_currency_symbol()."<input type='text' value='{$shipping}' name='weight_shipping[]' size='4'>&nbsp;&nbsp;<a href='#' class='delete_button' >".TXT_WPSC_DELETE."</a></td></tr>";
+				$output .="<i style='color: grey;'>".__('If weight is ', 'wpsc')."</i><input type='text' value='$key' name='weight_layer[]'size='4'><i style='color: grey;'>".__(' and above', 'wpsc')."</i></td><td>".wpsc_get_currency_symbol()."<input type='text' value='{$shipping}' name='weight_shipping[]' size='4'>&nbsp;&nbsp;<a href='#' class='delete_button' >".__('Delete', 'wpsc')."</a></td></tr>";
 			}
 		}
 		$output.="<input type='hidden' name='checkpage' value='weight'>";
@@ -76,10 +76,49 @@ class weightrate {
 		}
 	}
 	
-	function get_item_shipping($unit_price, $quantity, $weight, $product_id) {
-	  return 0;
-	}
 	
+	function get_item_shipping(&$cart_item) {
+		global $wpdb, $wpsc_cart;
+		$unit_price = $cart_item->unit_price;
+		$quantity = $cart_item->quantity;
+		$weight = $cart_item->weight;
+		$product_id = $cart_item->product_id;
+
+		
+		$uses_billing_address = false;
+		foreach((array)$cart_item->category_id_list as $category_id) {
+			$uses_billing_address = (bool)wpsc_get_categorymeta($category_id, 'uses_billing_address');
+			if($uses_billing_address === true) {
+			  break; /// just one true value is sufficient
+			}
+		}
+
+    if(is_numeric($product_id) && (get_option('do_not_use_shipping') != 1)) {
+			if($uses_billing_address == true) {
+				$country_code = $wpsc_cart->selected_country;
+			} else {
+				$country_code = $wpsc_cart->delivery_country;
+			}
+			
+      $product_list = $wpdb->get_row("SELECT * FROM `".WPSC_TABLE_PRODUCT_LIST."` WHERE `id`='{$product_id}' LIMIT 1",ARRAY_A);
+      if($product_list['no_shipping'] == 0) {
+        //if the item has shipping
+        if($country_code == get_option('base_country')) {
+          $additional_shipping = $product_list['pnp'];
+				} else {
+          $additional_shipping = $product_list['international_pnp'];
+				}          
+        $shipping = $quantity * $additional_shipping;
+			} else {
+        //if the item does not have shipping
+        $shipping = 0;
+			}
+		} else {
+      //if the item is invalid or all items do not have shipping
+			$shipping = 0;
+		}
+    return $shipping;	
+	}	
 	function get_cart_shipping($total_price, $weight) {
 		$layers = get_option('weight_rate_layers');
 		if ($layers != '') {

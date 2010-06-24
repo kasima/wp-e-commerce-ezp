@@ -389,7 +389,7 @@ ajax.post("index.php",return_price,"ajax=true&get_updated_price=true&pm="+pm+"&p
 function store_list(){
 	address = document.getElementById('user_address').value;
 	city = document.getElementById('user_city').value;
-	if ((address != '')&&(city != '')) {
+	if ((address != '') && (city != '')) {
 		document.getElementById('gloc_loading').style.display='block';
 		ajax.post("index.php",return_store_list,"ajax=true&store_list=true&addr="+address+"&city="+city);
 	}
@@ -466,7 +466,7 @@ var usps_method_switch=function (results){
 }
 
 function add_meta_box(results){
-	jQuery(".wpsc_buy_button").before(results);
+//	jQuery(".wpsc_buy_button").before(results);
 	jQuery('.time_requested').datepicker({ dateFormat: 'yy-mm-dd' });
 }
 

@@ -12,7 +12,7 @@ function wpsc_theme_options_default() {
 	?>
 		<tr>
 			<th scope="row">
-				<?php echo TXT_WPSC_PAGE_NUMBER_POSITION;?>:
+				<?php echo __('Page Number position', 'wpsc');?>:
 			</th>
 			<td>
 				<input type='radio' value='1' name='wpsc_page_number_position' id='wpsc_page_number_position1' <?php if (get_option('wpsc_page_number_position') == 1) { echo "checked='checked'"; } ?> /><label for='wpsc_page_number_position1'>Top</label>&nbsp;

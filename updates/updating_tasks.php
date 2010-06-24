@@ -50,10 +50,10 @@ if(get_option('wpsc_use_pnp_cols') != 'true') {
      
  */    
 if(get_option('wpsc_trackingid_message') == ''){
-	update_option('wpsc_trackingid_message', TXT_WPSC_TRACKINGEMAILMSG);
+	update_option('wpsc_trackingid_message', __('Your purchase from %shop_name% has just been dispatched. It should arrive soon. To keep track of your products status a tracking id has been attached. \r\n your tracking id is: %trackid%', 'wpsc'));
 }     
 if(get_option('wpsc_trackingid_subject') == ''){
-	update_option('wpsc_trackingid_subject', TXT_WPSC_TRACKINGEMAILSUBJECTMSG);
+	update_option('wpsc_trackingid_subject', __('Your Order from %shop_name% has been dispatched', 'wpsc'));
 }     
 /* adds nice names for permalinks for products */
 
@@ -650,21 +650,21 @@ if($wpdb->get_var("SELECT COUNT(*) FROM `".WPSC_TABLE_CURRENCY_LIST."` WHERE `co
 	$wpdb->query("UPDATE `".WPSC_TABLE_CURRENCY_LIST."` SET `continent`='asiapacific' WHERE `continent`='asiapasific'");
 }
 
-add_option('wpsc_email_receipt', '', TXT_WPSC_DEFAULT_PURCHASE_RECEIPT, 'yes');
-add_option('wpsc_email_admin', '', TXT_WPSC_DEFAULT_PURCHASE_REPORT, 'yes');
+add_option('wpsc_email_receipt', '', __('Thank you for purchasing with %shop_name%, any items to be shipped will be processed as soon as possible, any items that can be downloaded can be downloaded using the links on this page.All prices include tax and postage and packaging where applicable.You ordered these items:%product_list%%total_shipping%%total_price%', 'wpsc'), 'yes');
+add_option('wpsc_email_admin', '', __('%product_list%%total_shipping%%total_price%', 'wpsc'), 'yes');
 
 if(get_option('wpsc_email_receipt') == '') {
 	if(get_option('email_receipt') != '') {
 		update_option('wpsc_email_receipt', get_option('email_receipt'));
 	} else {
-		update_option('wpsc_email_receipt', TXT_WPSC_DEFAULT_PURCHASE_RECEIPT);
+		update_option('wpsc_email_receipt', __('Thank you for purchasing with %shop_name%, any items to be shipped will be processed as soon as possible, any items that can be downloaded can be downloaded using the links on this page.All prices include tax and postage and packaging where applicable.You ordered these items:%product_list%%total_shipping%%total_price%', 'wpsc'));
 	}
 }
 if(get_option('wpsc_email_admin') == '') {
   if(get_option('email_admin') != '') {
 		update_option('wpsc_email_admin', get_option('email_admin'));
 	} else {
-		update_option('wpsc_email_admin', TXT_WPSC_DEFAULT_PURCHASE_REPORT);
+		update_option('wpsc_email_admin', __('%product_list%%total_shipping%%total_price%', 'wpsc'));
 	}
 }
 

@@ -44,14 +44,17 @@ if(is_numeric($height) && is_numeric($width) && function_exists('imagecreatefrom
       }
     ImageCopyResampled($dst_img,$src_img,0,0,0,0,$width,$height,$source_w,$source_h);
     //exit($destdir);
+	
+	$image_quality = wpsc_image_quality();
+	
     switch($imagetype[2])
       {
       case IMAGETYPE_JPEG:
-      imagejpeg($dst_img, $destdir, 75);
+      imagejpeg($dst_img, $destdir, $image_quality);
       break;
 
       case IMAGETYPE_GIF:
-      imagejpeg($dst_img, $destdir, 75); //our server doesnt support saving gif, make it save gif images if you need gif images, otherwise, jpeg will do.
+      imagejpeg($dst_img, $destdir, $image_quality); //our server doesnt support saving gif, make it save gif images if you need gif images, otherwise, jpeg will do.
       break;
 
       case IMAGETYPE_PNG:

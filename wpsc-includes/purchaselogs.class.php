@@ -76,7 +76,7 @@ function wpsc_purchlogs_has_customfields($id = ''){
 	//return true;
 	if($id == ''){
 		foreach((array)$purchlogitem->allcartcontent as $cartitem){
-			if($cartitem->files != 'N;' || $cartitem->custom_message != ''){
+			if ( ( $cartitem->files != 'N;' && $cartitem->files != '' ) || $cartitem->custom_message != '' ) {
 				return true;
 			}
 		}
@@ -84,7 +84,7 @@ function wpsc_purchlogs_has_customfields($id = ''){
 	}else{
 		$purchlogitem = new wpsc_purchaselogs_items($id);
 		foreach((array)$purchlogitem->allcartcontent as $cartitem){
-			if($cartitem->files != 'N;' || $cartitem->custom_message != ''){
+			if ( ( $cartitem->files != 'N;' && $cartitem->files != '' ) || $cartitem->custom_message != '' ) {
 				return true;
 			}
 		}
@@ -117,14 +117,13 @@ function wpsc_purchlogs_customfiles(){
 	foreach($purchlogitem->allcartcontent as $cartitem){
 		if($cartitem->files != 'N;'){
 			$file = unserialize($cartitem->files);
-			//exit('<pre>'.var_dump($file,true).'</pre>');
 			if($file["mime_type"] == "image/jpeg" ||$file["mime_type"] == "image/png"||$file["mime_type"] == "image/gif"){
 				$image  = "<a href='".WPSC_USER_UPLOADS_URL.$file['file_name']."' >";
-				$image .= "<img src='index.php?image_name=".$file['file_name']."' alt='' />";
+				$image .= $file["file_name"];
 				$image .="</a>";
-				$files[] = $cartitem->name.' :<br />'.$image;
+				$files[] = $cartitem->name.' :'.$image;
 			}else{
-				$files[] = $cartitem->name.' :<br />'.$file['file_name'];
+				$files[] = $cartitem->name.' :'.$file['file_name'];
 			}
 			
 			//return true;
@@ -176,7 +175,7 @@ function wpsc_the_purch_item_date(){
 }
 function wpsc_the_purch_item_name(){
 	global $purchlogs;
-	//exit('<pre>'.print_r($purchlogs, true).'</pre>');
+	//exit('<pre>'.print_r($purchlogs->the_purch_item_name(), true).'</pre>');
 	if(wpsc_purchlogs_has_customfields(wpsc_the_purch_item_id())){
 		return $purchlogs->the_purch_item_name().'<img src="'.WPSC_URL.'/images/info_icon.jpg" title="This Purchase has custom user content" alt="exclamation icon" />';
 	}else{
@@ -224,17 +223,21 @@ function wpsc_the_purch_status_name(){
 function wpsc_purchlogs_getfirstdates(){
 	global $purchlogs;
 	$dates = $purchlogs->getdates();
-	
+	$i = 0;
 	foreach($dates as $date){
 		$is_selected = '';
 		$cleanDate = date('M Y', $date['start']);
 		$value = $date["start"]."_".$date["end"];
 		if($value == $_GET['view_purchlogs_by']) {
 			$is_selected = 'selected="selected"';
+		}elseif(!isset($_GET['view_purchlogs_by']) && $i == 0){
+			$is_selected = 'selected="selected"';			
 		}
+		
 		$fDate .= "<option value='{$value}' {$is_selected}>".$cleanDate."</option>";
+		$i++;
 	}
-//	exit($i);
+//	exit($i.' '.count($dates));
 	return $fDate;
 }
 function wpsc_change_purchlog_view($viewby, $status=''){
@@ -294,10 +297,18 @@ function wpsc_purchaselog_details_name(){
 	global $purchlogitem;
 	return stripslashes($purchlogitem->purchitem->name);
 }
+
+function wpsc_purchaselog_details_id(){
+	global $purchlogitem;
+	return $purchlogitem->purchitem->id;
+}
+
 function wpsc_the_purchaselog_item(){
 	global $purchlogitem;
 	return $purchlogitem->the_purch_item();
 }
+
+
 function wpsc_purchaselog_details_SKU(){
 	global $purchlogitem;
 //	exit('<pre>'.print_r($purchlogitem->purchitem,true).'</pre>');
@@ -322,11 +333,43 @@ function wpsc_purchaselog_details_price(){
 	return $purchlogitem->purchitem->price;
 }
 
-
-function wpsc_purchaselog_details_tax(){
+function wpsc_purchaselog_details_shipping(){
 	global $purchlogitem;
 //	exit('<pre>'.print_r($purchlogitem->purchitem, true).'</pre>');
-	return $purchlogitem->purchitem->tax_charged;
+	return $purchlogitem->purchitem->pnp;
+}
+
+function wpsc_purchaselog_details_tax(){
+	global $purchlogitem,$wpsc_cart;
+//	exit('<pre>'.print_r($purchlogitem->purchitem, true).'</pre>');
+	if(wpsc_tax_isincluded() == false){
+			return nzshpcrt_currency_display($purchlogitem->purchitem->tax_charged,true);
+		}else{
+			//exit('<pre>'.print_r($purchlogitem,true).'</pre>');
+			if($purchlogitem->purchitem->notax == 0){
+				if($purchlogitem->purchitem->price == null && $id != null){
+					foreach((array)$purchlogitem->allcartcontent as $cartcontent){
+					//exit('<pre>'.print_r($cartcontent, true).'</pre>');
+						if(($cartcontent->prodid == $id) && ($cartcontent->notax == 1)){
+							return '-';
+						}
+					}
+					$price = $id;
+				}else{
+					$price = $purchlogitem->purchitem->price;
+				}
+				$tax = ($price/(100+$wpsc_cart->tax_percentage)*$wpsc_cart->tax_percentage);
+
+				$tax = $wpsc_cart->process_as_currency($tax);
+				return $tax.' ('.$wpsc_cart->tax_percentage.'%)';
+			}else{
+	//			$tax = 0;
+				return '-';
+			}
+			
+			
+		}
+	
 }
 
 
@@ -347,8 +390,9 @@ function wpsc_purchaselog_details_date(){
 function wpsc_purchaselog_details_total(){
 	global $purchlogitem;
 	$total = 0;
-  $total += ($purchlogitem->purchitem->price*$purchlogitem->purchitem->quantity);
-  $total += ($purchlogitem->purchitem->tax_charged*$purchlogitem->purchitem->quantity);
+  $total += ($purchlogitem->purchitem->price * $purchlogitem->purchitem->quantity);
+  $total += ($purchlogitem->purchitem->pnp * $purchlogitem->purchitem->quantity);
+  $total += ($purchlogitem->purchitem->tax_charged * $purchlogitem->purchitem->quantity);
   //$total -= $purchlogitem->extrainfo->discount_value;
 	$purchlogitem->totalAmount += $total;
 	return $total;
@@ -412,51 +456,98 @@ function wpsc_display_purchlog_totalprice(){
 	$purchlogitem->totalAmount -= wpsc_display_purchlog_discount(true);
 	$purchlogitem->totalAmount += wpsc_display_purchlog_shipping(true);
 	//$purchlogitem->totalAmount += $purchlogitem->extrainfo->base_shipping;
-	return nzshpcrt_currency_display($purchlogitem->totalAmount, true);
+	return nzshpcrt_currency_display($purchlogitem->extrainfo->totalprice, true);
 }
 function wpsc_display_purchlog_buyers_name(){
 	global $purchlogitem;
-	return htmlentities(stripslashes($purchlogitem->userinfo['billingfirstname']['value'] ), ENT_QUOTES).' '.htmlentities(stripslashes($purchlogitem->userinfo['billinglastname']['value'] ), ENT_QUOTES);
+	return htmlentities(stripslashes($purchlogitem->userinfo['billingfirstname']['value'] ), ENT_QUOTES,'UTF-8').' '.htmlentities(stripslashes($purchlogitem->userinfo['billinglastname']['value'] ), ENT_QUOTES,'UTF-8');
 }
 function wpsc_display_purchlog_buyers_email(){
 	global $purchlogitem;
 	//exit('<pre>'.print_r($purchlogitem->userinfo,true).'</pre>');
-	return htmlentities(stripslashes($purchlogitem->userinfo['billingemail']['value'] ), ENT_QUOTES);
+	return htmlentities(stripslashes($purchlogitem->userinfo['billingemail']['value'] ), ENT_QUOTES,'UTF-8');
 }
 function wpsc_display_purchlog_buyers_address(){
 	global $purchlogitem;
-	return htmlentities(stripslashes( $purchlogitem->userinfo['billingaddress']['value'] ), ENT_QUOTES);
+	//exit('<pre>'.print_r($purchlogitem, true).'</pre>');
+	$country = maybe_unserialize($purchlogitem->userinfo['billingcountry']['value']);
+	
+	if(wpsc_has_regions($country) ){
+		$country[1] = $purchlogitem->shippingstate($country[1]).', ';
+	}
+	$address = $purchlogitem->userinfo['billingaddress']['value'].', '.$country[1].$country[0];			
+	return htmlentities(stripslashes( $address ), ENT_QUOTES,'UTF-8');
 
 }
+
 function wpsc_display_purchlog_buyers_phone(){
 	global $purchlogitem;
 	//exit('<pre>'.print_r($purchlogitem->userinfo,true).'</pre>');
-	return htmlentities(stripslashes($purchlogitem->userinfo['billingphone']['value']), ENT_QUOTES);
+	return htmlentities(stripslashes($purchlogitem->userinfo['billingphone']['value']), ENT_QUOTES,'UTF-8');
 }
 function wpsc_display_purchlog_shipping_name(){
 	global $purchlogitem;
 
-	return htmlentities(stripslashes($purchlogitem->shippinginfo['shippingfirstname']['value']), ENT_QUOTES).' '.htmlentities(stripslashes($purchlogitem->shippinginfo['shippinglastname']['value']), ENT_QUOTES);
+	return htmlentities(stripslashes($purchlogitem->shippinginfo['shippingfirstname']['value']), ENT_QUOTES,'UTF-8').' '.htmlentities(stripslashes($purchlogitem->shippinginfo['shippinglastname']['value']), ENT_QUOTES,'UTF-8');
 }
 function wpsc_display_purchlog_shipping_address(){
 	global $purchlogitem;
 //	exit('<pre>'.print_r($purchlogitem->shippinginfo,true).'</pre>');
-	return htmlentities(stripslashes($purchlogitem->shippinginfo['shippingaddress']['value']), ENT_QUOTES);
+	return htmlentities(stripslashes($purchlogitem->shippinginfo['shippingaddress']['value']), ENT_QUOTES,'UTF-8');
 }
 function wpsc_display_purchlog_shipping_city(){
 	global $purchlogitem;
 //	exit('<pre>'.print_r($purchlogitem->shippinginfo,true).'</pre>');
-	return htmlentities(stripslashes($purchlogitem->shippinginfo['shippingcity']['value']), ENT_QUOTES);
+	return htmlentities(stripslashes($purchlogitem->shippinginfo['shippingcity']['value']), ENT_QUOTES,'UTF-8');
+}
+function wpsc_has_regions($country){
+	global $wpdb;
+	if(is_array($country)){
+		$country_data = $wpdb->get_row("SELECT * FROM `".WPSC_TABLE_CURRENCY_LIST."` WHERE `isocode` IN('".$country[0]."') LIMIT 1",ARRAY_A);
+	}else{
+		$country_data = $wpdb->get_row("SELECT * FROM `".WPSC_TABLE_CURRENCY_LIST."` WHERE `isocode` IN('".$country."') LIMIT 1",ARRAY_A);
+	}
+	if($country_data['has_regions'] == 1){
+		return true;
+	}else{
+		return false;
+	}
 }
 function wpsc_display_purchlog_shipping_state_and_postcode(){
-	global $purchlogitem;
-	//exit('<pre>'.print_r($purchlogitem->shippinginfo,true).'</pre>');
-	return $purchlogitem->shippingstate($purchlogitem->shippinginfo['shippingstate']['value']).', '.$purchlogitem->shippinginfo['shippingpostcode']['value'];
+	global $wpdb, $purchlogitem;
+	$country = maybe_unserialize($purchlogitem->shippinginfo['shippingcountry']['value']);
+//	exit('<pre>'.print_r($country,true).'</pre>');
+	$state='';
+	if(wpsc_has_regions($country)){
+		if($purchlogitem->shippinginfo['shippingstate']['value'] != '' ){
+			$state = $purchlogitem->shippingstate($purchlogitem->shippinginfo['shippingstate']['value']).', ';
+			//exit('State: '.$state);
+		}else{
+			$country = maybe_unserialize($purchlogitem->shippinginfo['shippingcountry']['value']);
+			if(is_array($country) && is_numeric($country[0])){
+				$state = $purchlogitem->shippingstate($country[0]).', ';
+				$country = $country[1];
+			}else{
+				$state = $purchlogitem->shippingstate($country[1]).', ';
+				$country = $country[0];
+			}
+		}
+	}
+	return $state.$purchlogitem->shippinginfo['shippingpostcode']['value'];
 	//return $purchlogitem->shippinginfo['shippingstate']['value'].', '.$purchlogitem->shippinginfo['shippingpostcode']['value'];
 }
 function wpsc_display_purchlog_shipping_country(){
 	global $purchlogitem;
-	return htmlentities(stripslashes($purchlogitem->shippinginfo['shippingcountry']['value']), ENT_QUOTES);
+	$country = maybe_unserialize($purchlogitem->shippinginfo['shippingcountry']['value']);
+//	exit('<pre>'.print_r($country, 1).'</pre>');
+	if(is_array($country)){
+		if(is_numeric($country[0])){
+			$country = $country[1];
+		}else{
+			$country = $country[0];
+		}
+	}
+	return htmlentities(stripslashes($country), ENT_QUOTES,'UTF-8');
 }
 function wpsc_display_purchlog_shipping_method(){
 	global $purchlogitem;
@@ -502,7 +593,7 @@ function wpsc_purchlogs_have_downloads_locked(){
 	global $purchlogitem;
 	$ip = $purchlogitem->have_downloads_locked();
 	if($ip != ''){
-		return sprintf(TXT_WPSC_CLEAR_IP_LOCKS, $ip);
+		return sprintf(__('Release downloads locked to this IP address %s', 'wpsc'), $ip);
 	}else{
 		return false;
 	}
@@ -669,7 +760,7 @@ class wpsc_purchaselogs{
 	
 	function  getall_formdata(){
 		global $wpdb;
-		$form_sql = "SELECT * FROM `".WPSC_TABLE_CHECKOUT_FORMS."` WHERE `active` = '1' AND `display_log` = '1';";
+		$form_sql = "SELECT * FROM `".WPSC_TABLE_CHECKOUT_FORMS."` WHERE `active` = '1';";
     	$form_data = $wpdb->get_results($form_sql,ARRAY_A);
     	$this->form_data = $form_data;
     	return $form_data;
@@ -722,7 +813,7 @@ class wpsc_purchaselogs{
 		  $wpdb->query("DELETE FROM `".WPSC_TABLE_CART_CONTENTS."` WHERE `purchaseid`='$deleteid'");
 		  $wpdb->query("DELETE FROM `".WPSC_TABLE_SUBMITED_FORM_DATA."` WHERE `log_id` IN ('$deleteid')");
 		  $wpdb->query("DELETE FROM `".WPSC_TABLE_PURCHASE_LOGS."` WHERE `id`='$deleteid' LIMIT 1");
-		  return '<div id="message" class="updated fade"><p>'.TXT_WPSC_THANKS_DELETED.'</p></div>';
+		  return '<div id="message" class="updated fade"><p>'.__('Thanks, the purchase log record has been deleted', 'wpsc').'</p></div>';
 		}
 		
 	}
@@ -816,21 +907,17 @@ class wpsc_purchaselogs{
 	function the_purch_item_name(){
 		global $wpdb;
 		$i=0;
-		//exit('<pre>'.print_r($this->form_data, true).'</pre>');
+		if($this->form_data == null){
+			$this->getall_formdata();
+		}
 		foreach((array)$this->form_data as $formdata){
 		if(in_array('billingemail', $formdata)){
-				$emailformid = $formdata['id'];
-			}elseif(in_array('email', $formdata)){
 				$emailformid = $formdata['id'];
 			}
 			if(in_array('billingfirstname', $formdata)){
 				$fNameformid = $formdata['id'];
-			}elseif(in_array('First Name', $formdata)){
-				$fNameformid = $formdata['id'];
 			}
 			if(in_array('billinglastname', $formdata)){
-				$lNameformid = $formdata['id'];
-			}elseif(in_array('Last Name', $formdata)){
 				$lNameformid = $formdata['id'];
 			}
 			$i++;
@@ -842,7 +929,7 @@ class wpsc_purchaselogs{
 		$sql = "SELECT value FROM ".WPSC_TABLE_SUBMITED_FORM_DATA." WHERE log_id=".$this->purchitem->id." AND form_id=".$fNameformid;
 		$fname = $wpdb->get_var($sql);
 		if(!$fname){
-			//exit($sql);
+		//	exit($sql);
 		}
 		$sql = "SELECT value FROM ".WPSC_TABLE_SUBMITED_FORM_DATA." WHERE log_id=".$this->purchitem->id." AND form_id=".$lNameformid;
 		$lname = $wpdb->get_var($sql);
