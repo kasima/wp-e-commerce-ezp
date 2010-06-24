@@ -7,7 +7,7 @@ function widget_specials($args) {
   $special_count = $wpdb->get_var("SELECT COUNT(*) AS `count` FROM `".WPSC_TABLE_PRODUCT_LIST."` WHERE `special_price` != '0.00'  AND `active` IN ('1')");   
   //exit('COUNT'.$special_count);
   if($special_count > 0) {
-    $title = empty($options['title']) ? __(TXT_WPSC_PRODUCT_SPECIALS) : $options['title'];
+    $title = empty($options['title']) ? __(__('Product Specials', 'wpsc')) : $options['title'];
     echo $before_widget; 
     $full_title = $before_title . $title . $after_title;
     echo $full_title;
@@ -63,10 +63,10 @@ function widget_specials($args) {
 				$output .= "<input type='hidden' name='item' value='".$special['id']."' />";
 				$output .= "<input type='hidden' name='wpsc_ajax_action' value='special_widget' />";			
 				if(($special['quantity_limited'] == 1) && ($special['quantity'] < 1)) {
-					$output .= TXT_WPSC_PRODUCTSOLDOUT."";
+					$output .= __('This product has sold out.', 'wpsc')."";
 				} else {
 					//$output .= $variations_processor->display_product_variations($special['id'],true);
-					$output .= "<input type='submit' name='".TXT_WPSC_ADDTOCART."' value='".TXT_WPSC_ADDTOCART."'  />";
+					$output .= "<input type='submit' name='".__('Add To Cart', 'wpsc')."' value='".__('Add To Cart', 'wpsc')."'  />";
 				}
 				$output .= "</form>";
 			}
@@ -109,8 +109,8 @@ function widget_specials_control() {
 
 function widget_specials_init() {
   if(function_exists('register_sidebar_widget')) {
-    register_sidebar_widget(TXT_WPSC_PRODUCT_SPECIALS, 'widget_specials');
-    register_widget_control(TXT_WPSC_PRODUCT_SPECIALS, 'widget_specials_control');
+    register_sidebar_widget(__('Product Specials', 'wpsc'), 'widget_specials');
+    register_widget_control(__('Product Specials', 'wpsc'), 'widget_specials_control');
 	}
   return;
 }

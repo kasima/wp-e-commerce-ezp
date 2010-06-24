@@ -266,7 +266,7 @@
 	
 	tinymce.create('tinymce.plugins.userlogpage_image', {
 		init : function(ed, url) {
-			var pb = '<img src="' + url + '/productspage.gif" class="transactionresultpage_image mceItemNoResize" />', cls = 'userlogpage_image', sep = ed.getParam('userlogpage_image', '[userlog]'), pbRE;
+			var pb = '<img src="' + url + '/productspage.gif" class="userlogpage_image mceItemNoResize" />', cls = 'userlogpage_image', sep = ed.getParam('userlogpage_image', '[userlog]'), pbRE;
 
 			pbRE = new RegExp(sep.replace(/[\?\.\*\[\]\(\)\{\}\+\^\$\:]/g, function(a) {return '\\' + a;}), 'g');
 			

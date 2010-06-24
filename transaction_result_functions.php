@@ -1,12 +1,13 @@
 <?php
 function transaction_results($sessionid, $echo_to_screen = true, $transaction_id = null) {
-	global $wpdb,$wpsc_cart;
+	global $wpdb,$wpsc_cart, $wpsc_shipping_modules;
+
 	//$curgateway = get_option('payment_gateway');
 	$curgateway = $wpdb->get_var("SELECT gateway FROM ".WPSC_TABLE_PURCHASE_LOGS." WHERE sessionid='$sessionid'");
 	$errorcode = 0;
 	$order_status= 2;
 	$siteurl = get_option('siteurl');
-	
+
 	/*
 	 * {Notes} Double check that $Echo_To_Screen is a boolean value
 	 */
@@ -19,7 +20,8 @@ function transaction_results($sessionid, $echo_to_screen = true, $transaction_id
 		}
 		
 		$purchase_log = $wpdb->get_row("SELECT * FROM `".WPSC_TABLE_PURCHASE_LOGS."` WHERE `sessionid`= ".$sessionid." LIMIT 1",ARRAY_A) ;
-		
+		$thepurchlogitem = new wpsc_purchaselogs_items((int)$purchase_log['id']);
+
 		if(($purchase_log['gateway'] == "testmode") && ($purchase_log['processed'] < 2))  {
 			$message = get_option('wpsc_email_receipt');
 			$message_html = $message;
@@ -28,25 +30,27 @@ function transaction_results($sessionid, $echo_to_screen = true, $transaction_id
 			$message_html = $message;
 		}
 		$order_url = $siteurl."/wp-admin/admin.php?page=".WPSC_DIR_NAME."/display-log.php&amp;purchcaseid=".$purchase_log['id'];
-
 		if(($_GET['ipn_request'] != 'true') and (get_option('paypal_ipn') == 1)) {
 			if($purchase_log == null) {
-				echo TXT_WPSC_ORDER_FAILED;
+				echo __('We&#39;re Sorry, your order has not been accepted, the most likely reason is that you have insufficient funds.', 'wpsc');
 				if((get_option('purch_log_email') != null) && ($purchase_log['email_sent'] != 1)) {
-					wp_mail(get_option('purch_log_email'), TXT_WPSC_NEW_ORDER_PENDING_SUBJECT, TXT_WPSC_NEW_ORDER_PENDING_BODY.$order_url, "From: ".get_option('return_email')."");
+					wp_mail(get_option('purch_log_email'), __('New pending order', 'wpsc'), __('There is a new order awaiting processing:', 'wpsc').$order_url, "From: ".get_option('return_email')."");
 				}
 				return false;
 			} else if ($purchase_log['processed'] < 2) {  //added by Thomas on 20/6/2007
-				echo TXT_WPSC_ORDER_PENDING . "<p style='margin: 1em 0px 0px 0px;' >".nl2br(get_option('payment_instructions'))."</p>";
+				echo __('Thank you, your purchase is pending, you will be sent an email once the order clears.', 'wpsc') . "<p style='margin: 1em 0px 0px 0px;' >".nl2br(get_option('payment_instructions'))."</p>";
 				/*if($purchase_log['gateway'] != 'testmode') {
 					if((get_option('purch_log_email') != null) && ($purchase_log['email_sent'] != 1)) {
-						mail(get_option('purch_log_email'), TXT_WPSC_NEW_ORDER_PENDING_SUBJECT, TXT_WPSC_NEW_ORDER_PENDING_BODY.$order_url, "From: ".get_option('return_email')."");
+						mail(get_option('purch_log_email'), __('New pending order', 'wpsc'), __('There is a new order awaiting processing:', 'wpsc').$order_url, "From: ".get_option('return_email')."");
 					}
 					return false;
 				}*/
 			}
 		}
-
+		if(isset($_GET['ssl_result_message']) && $_GET['ssl_result_message'] == 'APPROVAL'){
+			$order_status= 2;
+			$purchase_log['processed'] = 2;
+		}
 		$cart = $wpdb->get_results("SELECT * FROM `".WPSC_TABLE_CART_CONTENTS."` WHERE `purchaseid`='{$purchase_log['id']}'",ARRAY_A);
 		
 		if($purchase_log['shipping_country'] != '') {
@@ -63,9 +67,9 @@ function transaction_results($sessionid, $echo_to_screen = true, $transaction_id
 		$stock_adjusted = false;
 		$previous_download_ids = array(0); 
 		$product_list='';
-	
+		
 		if(($cart != null) && ($errorcode == 0)) {
-			foreach($cart as $row) {
+				foreach($cart as $row) {
 				$link = "";
 				$product_data = $wpdb->get_row("SELECT * FROM `".WPSC_TABLE_PRODUCT_LIST."` WHERE `id`='{$row['prodid']}' LIMIT 1", ARRAY_A) ;
 				if($purchase_log['email_sent'] != 1) {
@@ -75,25 +79,38 @@ function transaction_results($sessionid, $echo_to_screen = true, $transaction_id
 				do_action('wpsc_transaction_result_cart_item', array("purchase_id" =>$purchase_log['id'], "cart_item"=>$row, "purchase_log"=>$purchase_log));
 
 				if (($purchase_log['processed'] >= 2)) {
-					//echo "SELECT * FROM `".WPSC_TABLE_DOWNLOAD_STATUS."` WHERE `active`='1' AND `purchid`='".$purchase_log['id']."' AND (`cartid` = '".$row['id']."' OR (`cartid` IS NULL AND `fileid` = '{$product_data['file']}') ) AND `id` NOT IN ('".implode("','",$previous_download_ids)."') LIMIT 1";
-					$download_data = $wpdb->get_row("SELECT * FROM `".WPSC_TABLE_DOWNLOAD_STATUS."` WHERE `active`='1' AND `purchid`='".$purchase_log['id']."' AND (`cartid` = '".$row['id']."' OR (`cartid` IS NULL AND `fileid` = '{$product_data['file']}') ) AND `id` NOT IN ('".implode("','",$previous_download_ids)."') LIMIT 1",ARRAY_A);
+					$download_data = $wpdb->get_results("SELECT * FROM `".WPSC_TABLE_DOWNLOAD_STATUS."`
+					 INNER JOIN `".WPSC_TABLE_PRODUCT_FILES."`
+					  ON `".WPSC_TABLE_DOWNLOAD_STATUS."`.`fileid` = `".WPSC_TABLE_PRODUCT_FILES."`.`id`
+					  WHERE `".WPSC_TABLE_DOWNLOAD_STATUS."`.`active`='1'
+					  AND `".WPSC_TABLE_DOWNLOAD_STATUS."`.`purchid`='".$purchase_log['id']."'
+					  AND (
+						`".WPSC_TABLE_DOWNLOAD_STATUS."`.`cartid` = '".$row['id']."'
+							OR (
+								`".WPSC_TABLE_DOWNLOAD_STATUS."`.`cartid` IS NULL
+								AND `".WPSC_TABLE_DOWNLOAD_STATUS."`.`fileid` = '{$product_data['file']}'
+							)
+						)
+						AND `".WPSC_TABLE_DOWNLOAD_STATUS."`.`id` NOT IN ('".implode("','",$previous_download_ids)."')",ARRAY_A);
+					$link=array();
 						//exit('IM HERE'.$errorcode.'<pre>'.print_r($download_data).'</pre>');
-					if($download_data != null) {
-									if($download_data['uniqueid'] == null) {  // if the uniqueid is not equal to null, its "valid", regardless of what it is
-											$link = $siteurl."?downloadid=".$download_data['id'];
-									} else {
-											$link = $siteurl."?downloadid=".$download_data['uniqueid'];
-									}
+					if(sizeof($download_data) != 0) {
+						foreach($download_data as $single_download){
+							if($single_download['uniqueid'] == null){// if the uniqueid is not equal to null, its "valid", regardless of what it is
+								$link[] = array("url"=>$siteurl."?downloadid=".$single_download['id'], "name" =>$single_download["filename"]);	
+							}	else {
+								$link[] = array("url"=>$siteurl."?downloadid=".$single_download['uniqueid'], "name" =>$single_download["filename"]);
+							}
+						}
 						//$order_status= 4;
 					}else{
 							$order_status= $purchase_log['processed'];
 					}
 					$previous_download_ids[] = $download_data['id'];
-				
+					do_action('wpsc_confirm_checkout', $purchase_log['id']);
 				}
-				do_action('wpsc_confirm_checkout', $purchase_log['id']);
-		
-				$shipping = $row['pnp']*$row['quantity'];
+			//	do_action('wpsc_confirm_checkout', $purchase_log['id']);
+				$shipping = $row['pnp'];
 				$total_shipping += $shipping;
 		
 				if($product_data['special']==1) {
@@ -130,26 +147,40 @@ function transaction_results($sessionid, $echo_to_screen = true, $transaction_id
 					$variation_list = " (".stripslashes(implode(", ",$value_names)).")";
 				}
 			
-				if($link != '') {
+				if($link != '' && (!empty($link))) {
 				  $additional_content = apply_filters('wpsc_transaction_result_content', array("purchase_id" =>$purchase_log['id'], "cart_item"=>$row, "purchase_log"=>$purchase_log));
 					if(!is_string($additional_content)) {
 				    $additional_content = '';
 				  }
-					$product_list .= " - ". $product_data['name'] . stripslashes($variation_list) ."  ".$message_price ." ".TXT_WPSC_CLICKTODOWNLOAD.":\n\r $link\n\r".$additional_content;
-					$product_list_html .= " - ". $product_data['name'] . stripslashes($variation_list) ."  ".$message_price ."&nbsp;&nbsp;<a href='$link'>".TXT_WPSC_CLICKTODOWNLOAD."</a>\n". $additional_content;
+
+				  
+					//$product_list .= " - ". $product_data['name'] . stripslashes($variation_list) ."  ".$message_price ." ".__('Click to download', 'wpsc').":\n\r $link\n\r".$additional_content;
+					//$product_list_html .= " - ". $product_data['name'] . stripslashes($variation_list) ."  ".$message_price ."&nbsp;&nbsp;<a href='$link'>".__('Click to download', 'wpsc')."</a>\n". $additional_content;
+
+					$product_list .= " - ". $product_data['name'] . stripslashes($variation_list) ."  ".$message_price;
+					$product_list_html .= " - ". $product_data['name'] . stripslashes($variation_list) ."  ".$message_price;
+					foreach($link as $single_link){
+						$product_list .= "\n\r ".$single_link["name"].": ".$single_link["url"]."\n\r";
+						$product_list_html .= "<a href='".$single_link["url"]."'>".$single_link["name"]."</a>\n";
+						$report_product_list .="\n\r ".$single_link["name"].": ".$single_link["url"]."\n\r";
+					//	$report_product_list .="<a href='".$single_link["url"]."'>".$single_link["name"]."</a>\n";
+					}
+					$product_list .= $additional_content;
+					$product_list_html .= $additional_content;
 				} else {
 					$plural = '';
 					if($row['quantity'] > 1) {
 						$plural = "s";
 						}
-					$product_list.= " - ".$row['quantity']." ". $product_data['name'].stripslashes($variation_list )."  ". $message_price ."\n\r";
-					if ($shipping > 0) $product_list .= " - ". TXT_WPSC_SHIPPING.":".$shipping_price ."\n\r";
-					$product_list_html.= " - ".$row['quantity']." ". $product_data['name'].stripslashes($variation_list )."  ". $message_price ."\n\r";
-					if ($shipping > 0) $product_list_html .= " &nbsp; ". TXT_WPSC_SHIPPING.":".$shipping_price ."\n\r";
+					$product_list.= $row['quantity']." - ". $product_data['name'].stripslashes($variation_list )."  ". $message_price ."\n\r";
+					if ($shipping > 0) $product_list .= " - ". __('Shipping', 'wpsc').":".$shipping_price ."\n\r";
+					$product_list_html.= $row['quantity']." -  ". $product_data['name'].stripslashes($variation_list )."  ". $message_price ."\n\r";
+					if ($shipping > 0) $product_list_html .= " &nbsp; ". __('Shipping', 'wpsc').":".$shipping_price ."\n\r";
 
+					$report_product_list.= $row['quantity']." - ". $product_data['name'] .stripslashes($variation_list)."  ".$message_price ."\n\r";
 				}
 				$report = get_option('wpsc_email_admin');
-				$report_product_list.= " - ". $product_data['name'] .stripslashes($variation_list)."  ".$message_price ."\n\r";
+				
 			}
 			
 				// Decrement the stock here
@@ -173,24 +204,24 @@ function transaction_results($sessionid, $echo_to_screen = true, $transaction_id
 				// $message.= "\n\r";
 				$product_list.= "Your Purchase No.: ".$purchase_log['id']."\n\r";
 				if($purchase_log['discount_value'] > 0) {
-					$discount_email.= TXT_WPSC_DISCOUNT."\n\r: ";
+					$discount_email.= __('Discount', 'wpsc')."\n\r: ";
 					$discount_email .=$purchase_log['discount_data'].' : '.nzshpcrt_currency_display($purchase_log['discount_value'], 1, true)."\n\r";
 				}
-				$total_shipping_email.= TXT_WPSC_TOTALSHIPPING.": ".nzshpcrt_currency_display($total_shipping,1,true)."\n\r";
-				$total_price_email.= TXT_WPSC_TOTAL.": ".nzshpcrt_currency_display($total,1,true)."\n\r";
+				$total_shipping_email.= __('Total Shipping', 'wpsc').": ".nzshpcrt_currency_display($total_shipping,1,true)."\n\r";
+				$total_price_email.= __('Total', 'wpsc').": ".nzshpcrt_currency_display($total,1,true)."\n\r";
 				$product_list_html.= "Your Purchase No.: ".$purchase_log['id']."\n\n\r";
 				if($purchase_log['discount_value'] > 0) {
 					$report.= $discount_email."\n\r";
-					$total_shipping_html.= TXT_WPSC_DISCOUNT.": ".nzshpcrt_currency_display($purchase_log['discount_value'], 1, true)."\n\r";
+					$total_shipping_html.= __('Discount', 'wpsc').": ".nzshpcrt_currency_display($purchase_log['discount_value'], 1, true)."\n\r";
 				}
-				$total_shipping_html.= TXT_WPSC_TOTALSHIPPING.": ".nzshpcrt_currency_display($total_shipping,1,true)."\n\r";
-				$total_price_html.= TXT_WPSC_TOTAL.": ".nzshpcrt_currency_display($total, 1,true)."\n\r";
+				$total_shipping_html.= __('Total Shipping', 'wpsc').": ".nzshpcrt_currency_display($total_shipping,1,true)."\n\r";
+				$total_price_html.= __('Total', 'wpsc').": ".nzshpcrt_currency_display($total, 1,true)."\n\r";
 				if(isset($_GET['ti'])) {
-					$message.= "\n\r".TXT_WPSC_YOURTRANSACTIONID.": " . $_GET['ti'];
-					$message_html.= "\n\r".TXT_WPSC_YOURTRANSACTIONID.": " . $_GET['ti'];
-					$report.= "\n\r".TXT_WPSC_TRANSACTIONID.": " . $_GET['ti'];
+					$message.= "\n\r".__('Your Transaction ID', 'wpsc').": " . $_GET['ti'];
+					$message_html.= "\n\r".__('Your Transaction ID', 'wpsc').": " . $_GET['ti'];
+					$report.= "\n\r".__('Transaction ID', 'wpsc').": " . $_GET['ti'];
 				} else {
-					$report_id = "Purchase No.: ".$purchase_log['id']."\n\r";
+					$report_id = "Purchase # ".$purchase_log['id']."\n\r";
 				}
         
         
@@ -200,16 +231,19 @@ function transaction_results($sessionid, $echo_to_screen = true, $transaction_id
         $message = str_replace('%total_price%',$total_price_email,$message);
         //$message = str_replace('%order_status%',get_option('blogname'),$message);
         $message = str_replace('%shop_name%',get_option('blogname'),$message);
+		$message = str_replace( '%find_us%', $purchase_log['find_us'], $message );
         
         $report = str_replace('%product_list%',$report_product_list,$report);
         $report = str_replace('%total_shipping%',$total_shipping_email,$report);
         $report = str_replace('%total_price%',$total_price_email,$report);
         $report = str_replace('%shop_name%',get_option('blogname'),$report);
+		$report = str_replace( '%find_us%', $purchase_log['find_us'], $report );
         
         $message_html = str_replace('%product_list%',$product_list_html,$message_html);
         $message_html = str_replace('%total_shipping%',$total_shipping_html,$message_html);
         $message_html = str_replace('%total_price%',$total_price_email,$message_html);
         $message_html = str_replace('%shop_name%',get_option('blogname'),$message_html);
+		$message_html = str_replace( '%find_us%', $purchase_log['find_us'], $message_html );
         //$message_html = str_replace('%order_status%',get_option('blogname'),$message_html);
         
         
@@ -220,47 +254,92 @@ function transaction_results($sessionid, $echo_to_screen = true, $transaction_id
  					
 					if($purchase_log['processed'] < 2) {
 						$payment_instructions = strip_tags(get_option('payment_instructions'));
-						$message = TXT_WPSC_ORDER_PENDING . "\n\r" . $payment_instructions ."\n\r". $message;
-						wp_mail($email, TXT_WPSC_ORDER_PENDING_PAYMENT_REQUIRED, $message);
+						$message = __('Thank you, your purchase is pending, you will be sent an email once the order clears.', 'wpsc') . "\n\r" . $payment_instructions ."\n\r". $message;
+						wp_mail($email, __('Order Pending: Payment Required', 'wpsc'), $message);
 					} else {
-						wp_mail($email, TXT_WPSC_PURCHASERECEIPT, $message);
+						wp_mail($email, __('Purchase Receipt', 'wpsc'), $message);
 					}
 				}
 				remove_filter('wp_mail_from_name', 'wpsc_replace_reply_name');
  				remove_filter('wp_mail_from', 'wpsc_replace_reply_address');
-				$report_user = TXT_WPSC_CUSTOMERDETAILS."\n\r";
-				$form_sql = "SELECT * FROM `".WPSC_TABLE_SUBMITED_FORM_DATA."` WHERE `log_id` = '".$purchase_log['id']."'";
+				$report_user = __('Customer Details', 'wpsc')."\n\r";
+						$report_user .= "Billing Info \n\r";
+			foreach((array)$thepurchlogitem->userinfo as $userinfo){
+				if($userinfo['unique_name'] != 'billingcountry'){
+					$report_user .= "".$userinfo['name'].": ".$userinfo['value']."\n";
+				}else{
+					$userinfo['value'] = maybe_unserialize($userinfo['value']);
+					if(is_array($userinfo['value'] )){
+						if(!empty($userinfo['value'][1]) && !is_numeric($userinfo['value'][1])){
+							$report_user .= "State: ".$userinfo['value'][1]."\n";
+						}elseif(is_numeric($userinfo['value'][1])){
+							$report_user .= "State: ".wpsc_get_state_by_id($userinfo['value'][1],'name')."\n";
+						}
+						if(!empty($userinfo['value'][0])){
+							$report_user .= "Country: ".$userinfo['value'][0]."\n";
+						}
+					}else{
+						$report_user .= "".$userinfo['name'].": ".$userinfo['value']."\n";	
+					}
+				}
+			}
+			
+			$report_user .= "\n\rShipping Info \n\r";
+			foreach((array)$thepurchlogitem->shippinginfo as $userinfo){
+				if($userinfo['unique_name'] != 'shippingcountry' && $userinfo['unique_name'] != 'shippingstate'){
+					$report_user .= "".$userinfo['name'].": ".$userinfo['value']."\n";
+				}elseif($userinfo['unique_name'] == 'shippingcountry'){
+					$userinfo['value'] = maybe_unserialize($userinfo['value']);
+					if(is_array($userinfo['value'] )){
+						if(!empty($userinfo['value'][1]) && !is_numeric($userinfo['value'][1])){
+							$report_user .= "State: ".$userinfo['value'][1]."\n";
+						}elseif(is_numeric($userinfo['value'][1])){
+							$report_user .= "State: ".wpsc_get_state_by_id($userinfo['value'][1],'name')."\n";
+						}
+						if(!empty($userinfo['value'][0])){
+							$report_user .= "Country: ".$userinfo['value'][0]."\n";
+						}
+					}else{
+						$report_user .= "".$userinfo['name'].": ".$userinfo['value']."\n";	
+					}
+				}elseif($userinfo['unique_name'] == 'shippingstate'){
+					if(!empty($userinfo['value']) && !is_numeric($userinfo['value'])){
+						$report_user .= "".$userinfo['name'].": ".$userinfo['value']."\n";
+					}elseif(is_numeric($userinfo['value'])){
+							$report_user .= "State: ".wpsc_get_state_by_id($userinfo['value'],'name')."\n";
+					}
+				}
+			}
+			$report_user .= "\n\r";
+				/*
+$form_sql = "SELECT * FROM `".WPSC_TABLE_SUBMITED_FORM_DATA."` WHERE `log_id` = '".$purchase_log['id']."'";
 				$form_data = $wpdb->get_results($form_sql,ARRAY_A);
-				
+					
 				if($form_data != null) {
+				
 					foreach($form_data as $form_field) {
 						$form_data = $wpdb->get_row("SELECT * FROM `".WPSC_TABLE_CHECKOUT_FORMS."` WHERE `id` = '".$form_field['form_id']."' LIMIT 1", ARRAY_A);
 
 						switch($form_data['type']) {
 							case "country":
-								$delivery_region_count = $wpdb->get_var("SELECT COUNT(`regions`.`id`) FROM `".WPSC_TABLE_REGION_TAX."` AS `regions` INNER JOIN `".WPSC_TABLE_CURRENCY_LIST."` AS `country` ON `country`.`id` = `regions`.`country_id` WHERE `country`.`isocode` IN('".$wpdb->escape( $purchase_log['billing_country'])."')");
-								if(is_numeric($purchase_log['shipping_region']) && ($delivery_region_count > 0)) {
-									$report_user .= TXT_WPSC_STATE.": ".wpsc_get_region($purchase_log['billing_region'])."\n";
-								}
-								$report_user .= $form_data['name'].": ".wpsc_get_country($form_field['value'])."\n";
+							$report_user .= $form_data['name'].": ".wpsc_get_country($form_field['value'])."\n";
+							$report_user .= __('State', 'wpsc').": ".wpsc_get_region($purchase_log['billing_region'])."\n";
 							break;
 							
 							case "delivery_country":
-								$delivery_region_count = $wpdb->get_var("SELECT COUNT(`regions`.`id`) FROM `".WPSC_TABLE_REGION_TAX."` AS `regions` INNER JOIN `".WPSC_TABLE_CURRENCY_LIST."` AS `country` ON `country`.`id` = `regions`.`country_id` WHERE `country`.`isocode` IN('".$wpdb->escape( $purchase_log['shipping_country'])."')");
-								if(is_numeric($purchase_log['shipping_region']) && ($delivery_region_count > 0)) {
-									$report_user .= TXT_WPSC_DELIVERY_STATE.": ".wpsc_get_region($purchase_log['shipping_region'])."\n";
-								}
-								$report_user .= $form_data['name'].": ".wpsc_get_country($form_field['value'])."\n";
+							$report_user .= $form_data['name'].": ".wpsc_get_country($form_field['value'])."\n";
+							$report_user .= __('Delivery State', 'wpsc').": ".wpsc_get_region($purchase_log['shipping_region'])."\n";
 							break;
 							
 							default:
-								$report_user .= $form_data['name'].": ".$form_field['value']."\n";
+							$report_user .= wp_kses($form_data['name'], array()).": ".$form_field['value']."\n";
 							break;
 						}
 					}
 				}
 	
 				$report_user .= "\n\r";
+*/
 				$report = $report_user. $report_id . $report;
 				
 				if($stock_adjusted == true) {
@@ -269,7 +348,7 @@ function transaction_results($sessionid, $echo_to_screen = true, $transaction_id
 	
 				if((get_option('purch_log_email') != null) && ($purchase_log['email_sent'] != 1)) {
 				
-					wp_mail(get_option('purch_log_email'), TXT_WPSC_PURCHASEREPORT, $report);
+					wp_mail(get_option('purch_log_email'), __('Purchase Report', 'wpsc'), $report);
 					
 				}
 
@@ -285,7 +364,7 @@ function transaction_results($sessionid, $echo_to_screen = true, $transaction_id
 				if(true === $echo_to_screen) {
 					echo '<div class="wrap">';
 					if($sessionid != null) {
-						echo TXT_WPSC_THETRANSACTIONWASSUCCESSFUL."<br />";
+						echo __('The Transaction was successful', 'wpsc')."<br />";
 						echo "<br />" . nl2br(str_replace("$",'\$',$message_html));
 					}
 					echo '</div>';
@@ -293,7 +372,7 @@ function transaction_results($sessionid, $echo_to_screen = true, $transaction_id
 			} else {
 				if(true === $echo_to_screen) {
 					echo '<div class="wrap">';
-					echo TXT_WPSC_BUYPRODUCTS;
+					echo __('Oops, there is nothing in your cart.', 'wpsc') . "<a href='".get_option("product_list_url")."'>" . __('Please visit our shop', 'wpsc') . "</a>";
 					echo '</div>';
 				}
 			}

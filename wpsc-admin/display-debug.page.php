@@ -53,6 +53,9 @@ function wpsc_debug_page() {
 				<a href='?page=wpsc-debug&amp;wpsc_debug_action=wp-cron'>Display wp-cron tasks</a>
 			</li>
 			<li>
+				<a href='?page=wpsc-debug&amp;wpsc_debug_action=wpsc_expire_subscriptions'>Expire Subscriptions</a>
+			</li>
+			<li>
 				<a href='<?php echo $fixpage; ?>'>Fix Purchaselogs</a>
 			</li>
 		</ul>
@@ -115,6 +118,12 @@ function wpsc_debug_page() {
 			global $wp_filter, $merged_filters;
 			print_r($wp_filter);
 			
+			break;
+			
+			case 'wpsc_expire_subscriptions':
+			if(function_exists('wpsc_expire_subscriptions')) {
+				wpsc_expire_subscriptions();
+			}
 			break;
 			
 			case 'phpinfo':

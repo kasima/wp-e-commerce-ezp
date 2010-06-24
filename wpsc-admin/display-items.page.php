@@ -26,7 +26,7 @@ function wpsc_display_edit_products_page() {
   ?>
 	<div class="wrap">
 		<?php // screen_icon(); ?>
-		<h2><?php echo wp_specialchars( TXT_WPSC_DISPLAYPRODUCTS ); ?> </h2>
+		<h2><?php echo wp_specialchars( __('Display Products', 'wpsc') ); ?> </h2>
 		
 		<?php if(isset($_GET['ErrMessage']) && is_array($_SESSION['product_error_messages'])){ ?>
 				<div id="message" class="error fade">
@@ -111,7 +111,7 @@ function wpsc_display_edit_products_page() {
 			}
 				
 			if(count($unwriteable_directories) > 0) {
-				echo "<div class='error fade'>".str_replace(":directory:","<ul><li>".implode($unwriteable_directories, "</li><li>")."</li></ul>",TXT_WPSC_WRONG_FILE_PERMS)."</div>";
+				echo "<div class='error fade'>".str_replace(":directory:","<ul><li>".implode($unwriteable_directories, "</li><li>")."</li></ul>",__('The following directories are not writable: :directory: You won&#39;t be able to upload any images or files here. You will need to change the permissions on these directories to make them writable.', 'wpsc'))."</div>";
 			}
 			// class='stuffbox'
 	?>
@@ -162,22 +162,23 @@ function wpsc_admin_products_list($category_id = 0) {
   $is_sortable = false;
   $page = null;
   
+  $search_input = '';
+
 	if($_GET['search']) {
-		$search_string_title = "%".$wpdb->escape(stripslashes($_GET['search']))."%";
-		$search_string_description = "% ".$wpdb->escape(stripslashes($_GET['search']))."%";
+		$search_input = stripslashes($_GET['search']);
+
+		$search_string = "%".$wpdb->escape($search_input)."%";
 		
-		$search_sql = "AND (`products`.`name` LIKE '".$search_string_title."' OR `products`.`description` LIKE '".$search_string_description."')";
-		
-		$search_string = $_GET['search'];
+		$search_sql = "AND (`products`.`name` LIKE '".$search_string."' OR `products`.`description` LIKE '".$search_string."')";
+
 	} else {
 		$search_sql = '';
-		$search_string = '';
 	}
 
 	$search_sql = apply_filters('wpsc_admin_products_list_search_sql', $search_sql);
 
 	if($category_id > 0) {  // if we are getting items from only one category, this is a monster SQL query to do this with the product order
-		$sql = "SELECT `products`.`id` , `products`.`name` , `products`.`price` , `products`.`image`, `products`.`publish`, `categories`.`category_id`,`order`.`order`, IF(ISNULL(`order`.`order`), 0, 1) AS `order_state`
+		$sql = "SELECT `products`.`id` , `products`.`name` , `products`.`price` , `products`.`image`,`products`.`weight` , `products`.`publish`, `categories`.`category_id`,`order`.`order`, IF(ISNULL(`order`.`order`), 0, 1) AS `order_state`
 			FROM `".WPSC_TABLE_PRODUCT_LIST."` AS `products`
 			LEFT JOIN `".WPSC_TABLE_ITEM_CATEGORY_ASSOC."` AS `categories` ON `products`.`id` = `categories`.`product_id` 
 			LEFT JOIN `".WPSC_TABLE_PRODUCT_ORDER."` AS `order` ON ( 
@@ -196,6 +197,7 @@ function wpsc_admin_products_list($category_id = 0) {
 		$is_sortable = true;
 	} else {
 		$itempp = 10;
+		
 		if ($_GET['pageno']!='all') {
 		  if($_GET['pageno'] > 0) {
 				$page = absint($_GET['pageno']);
@@ -204,11 +206,19 @@ function wpsc_admin_products_list($category_id = 0) {
 		  }
 			$start = (int)($page * $itempp) - $itempp;
 			$sql = "SELECT DISTINCT * FROM `".WPSC_TABLE_PRODUCT_LIST."` AS `products` WHERE `products`.`active`='1' $search_sql ORDER BY `products`.`date_added` DESC LIMIT $start,$itempp";
+			if(get_option('wpsc_sort_by') == 'dragndrop'){
+				$sql = "SELECT DISTINCT * FROM `".WPSC_TABLE_PRODUCT_LIST."` AS `products` LEFT JOIN `".WPSC_TABLE_PRODUCT_ORDER."` AS `order` ON `products`.`id`= `order`.`product_id` WHERE `products`.`active`='1' AND `order`.`category_id`='0' $search_sql ORDER BY `order`.`order`";
+			}
+		
 		} else {
-			$sql = "SELECT DISTINCT * FROM `".WPSC_TABLE_PRODUCT_LIST."` AS `products` WHERE `products`.`active`='1' $search_sql ORDER BY `products`.`date_added`";
+				$sql = "SELECT DISTINCT * FROM `".WPSC_TABLE_PRODUCT_LIST."` AS `products` WHERE `products`.`active`='1' $search_sql ORDER BY `products`.`date_added`";
+
 		}
+
 	}  
+			//	exit($sql);
 	$product_list = $wpdb->get_results($sql,ARRAY_A);
+	//exit('<pre>'.print_r($product_list, true).'</pre>');
 	$num_products = $wpdb->get_var("SELECT COUNT(DISTINCT `products`.`id`) FROM `".WPSC_TABLE_PRODUCT_LIST."` AS `products` WHERE `products`.`active`='1' $search_sql");
 	
 	if (isset($itempp)) {
@@ -235,12 +245,13 @@ function wpsc_admin_products_list($category_id = 0) {
 		
 		
 		
-		
+		<?php	if(get_option('wpsc_sort_by') != 'dragndrop'){ ?>
 		<div class="tablenav-pages">
 			<?php
 				echo $page_links;
 			?>	
 		</div>
+		<?php } ?>
 		
 		<div class="alignleft actions">
 			<form action="admin.php" method="get">
@@ -256,7 +267,7 @@ function wpsc_admin_products_list($category_id = 0) {
 		<div class="tablenav">	
 			<div class="alignright search-box">
 				<input type='hidden' name='page' value='wpsc-edit-products'  />
-				<input type="text" class="search-input" id="page-search-input" name="search" value="<?php echo $_GET['search']; ?>" />
+				<input type="text" class="search-input" id="page-search-input" name="search" value="<?php echo $search_input; ?>" />
 				<input type="submit" name='wpsc_search' value="<?php _e( 'Search' ); ?>" class="button" />
 			</div>
 		
@@ -305,17 +316,22 @@ function wpsc_admin_products_list($category_id = 0) {
 						
 						// get the  product name, unless there is no name, in which case, display text indicating so
 						if ($product['name']=='') {
-							$product_name = "(".TXT_WPSC_NONAME.")";
+							$product_name = "(".__('No Name', 'wpsc').")";
 						} else {
 							$product_name = htmlentities(stripslashes($product['name']), ENT_QUOTES, 'UTF-8');
 						}
 						
-						
+
 					$category_html = '';	
+					if(get_option('wpsc_sort_by') != 'dragndrop'){
 					$category_list = $wpdb->get_results("SELECT `".WPSC_TABLE_PRODUCT_CATEGORIES."`.`id`,`".WPSC_TABLE_PRODUCT_CATEGORIES."`.`name` FROM `".WPSC_TABLE_ITEM_CATEGORY_ASSOC."` , `".WPSC_TABLE_PRODUCT_CATEGORIES."` WHERE `".WPSC_TABLE_ITEM_CATEGORY_ASSOC."`.`product_id` IN ('".$product['id']."') AND `".WPSC_TABLE_ITEM_CATEGORY_ASSOC."`.`category_id` = `".WPSC_TABLE_PRODUCT_CATEGORIES."`.`id` AND `".WPSC_TABLE_PRODUCT_CATEGORIES."`.`active` IN('1')",ARRAY_A);
+					}else{
+					$category_list = $wpdb->get_results("SELECT `".WPSC_TABLE_PRODUCT_CATEGORIES."`.`id`,`".WPSC_TABLE_PRODUCT_CATEGORIES."`.`name` FROM `".WPSC_TABLE_PRODUCT_CATEGORIES."` LEFT JOIN `".WPSC_TABLE_ITEM_CATEGORY_ASSOC."` ON `".WPSC_TABLE_ITEM_CATEGORY_ASSOC."`.`category_id`= `".WPSC_TABLE_PRODUCT_CATEGORIES."`.`id` WHERE `".WPSC_TABLE_ITEM_CATEGORY_ASSOC."`.`product_id` IN ('".$product['product_id']."')  AND `".WPSC_TABLE_PRODUCT_CATEGORIES."`.`active` IN('1')",ARRAY_A);
+					}
 					$i = 0;
 					foreach((array)$category_list as $category_row) {
 						if($i > 0) {
+							
 							$category_html .= "<br />";
 						}
 						
@@ -324,10 +340,17 @@ function wpsc_admin_products_list($category_id = 0) {
 						$i++;
 					}        
 									
-						
+								if(get_option('wpsc_sort_by') == 'dragndrop'){ 
+									$product['id'] = $product['product_id'];
+								}
+								
+								
 						?>
 							<tr class="product-edit <?php echo ( wpsc_publish_status($product['id']) ) ? ' wpsc_published' : ' wpsc_not_published'; ?>" id="product-<?php echo $product['id']?>" >
-									<th class="check-column" scope="row"><input type='checkbox' name='product[]' class='deletecheckbox' value='<?php echo $product['id'];?>' /></th>
+									<th class="check-column" scope="row">
+										<input type='checkbox' name='product[]' class='deletecheckbox' value='<?php echo $product['id'];?>' title="ID #<?php echo $product['id']; ?>" />
+										<?php echo do_action('wpsc_admin_product_checkbox', $product['id']); ?>
+									</th>
 									
 									
 									<td class="product-image ">
@@ -337,7 +360,7 @@ function wpsc_admin_products_list($category_id = 0) {
 									  <?php
 									  $edit_product_url = wp_nonce_url(htmlentities(add_query_arg('product_id', $product['id'])), 'edit_product_' . $product['id']);
 									  ?>
-										<a class='edit-product' href='<?php echo $edit_product_url; ?>'><?php echo $product_name; ?></a>
+										<a class='edit-product' href='<?php echo $edit_product_url; ?>' title="ID #<?php echo $product['id']; ?>: <?php echo $product_name; ?>"><?php echo $product_name; ?></a>
 											<?php
 											if($product['publish'] != 1 ) {
 												?> - <strong> <?php 	_e('Draft', 'wpsc'); ?>	</strong>	<?php
@@ -353,6 +376,13 @@ function wpsc_admin_products_list($category_id = 0) {
 												<img alt='<?php echo $product_alert['messages'];?>' title='<?php echo $product_alert['messages'];?>' class='product-alert-image' src='<?php echo  WPSC_URL;?>/images/product-alert.jpg' alt='' />
 												<?php
 											}
+											
+											// If a product alert has stuff to display, show it.
+											// Can be used to add extra icons etc
+											if ( !empty( $product_alert['display'] ) ) {
+												echo $product_alert['display'];
+											}
+											
 											?>
 											<img class='loadingImg' style='display:none;' src='<?php echo get_option('siteurl'); ?>/wp-admin/images/wpspin_light.gif' alt='loading' />
 									
@@ -363,7 +393,7 @@ function wpsc_admin_products_list($category_id = 0) {
 											</span>
 											 |
 											<span class="delete">
-												<a class='submitdelete'
+												<a class='submitdelete delete_button'
 													title='<?php echo attribute_escape(__('Delete this product', 'wpsc')); ?>'
 													href='<?php echo wp_nonce_url("admin.php?wpsc_admin_action=delete_product&amp;product={$product['id']}", 'delete_product_' . $product['id']); ?>'
 													onclick="if ( confirm(' <?php echo js_escape(sprintf( __("You are about to delete this product '%s'\n 'Cancel' to stop, 'OK' to delete."), $product['name'] )) ?>') ) { return true;}return false;"
@@ -437,12 +467,12 @@ function wpsc_admin_category_dropdown() {
 	$siteurl = get_option('siteurl');
 	$url =  urlencode(remove_query_arg(array('product_id','category_id')));
 	
-	$options = "<option value=''>".TXT_WPSC_ALLCATEGORIES."</option>\r\n";
+	$options = "<option value=''>".__('View All Categories', 'wpsc')."</option>\r\n";
 	$options .= wpsc_admin_category_dropdown_tree(null, 0, absint($_GET['category_id']));
 	
 	$concat = "<input type='hidden' name='page' value='{$_GET['page']}' />\r\n";
 	$concat .= "<select name='category_id' id='category_select'>".$options."</select>\r\n";
-	$concat .= "<input type='submit' class='button' id='submit_category_select' name='Filter' value='Filter' />\r\n";
+	$concat .= "<button class='button' id='submit_category_select'>Filter</button>\r\n";
 	return $concat;
 }
 

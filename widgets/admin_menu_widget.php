@@ -5,7 +5,7 @@ function widget_admin_menu($args){
   if($current_user->wp_capabilities['administrator'] == 1) {
 		extract($args);
 		//$options = get_option('widget_wp_shopping_cart');
-		$title = empty($options['title']) ? __(TXT_WPSC_ADMINMENU) : $options['title'];
+		$title = empty($options['title']) ? __(__('Admin Menu', 'wpsc')) : $options['title'];
 		echo $before_widget;
 		$full_title = $before_title . $title . $after_title;
 		echo $full_title;
@@ -19,7 +19,7 @@ function widget_admin_menu_control() { return null; }
 
 function widget_admin_menu_init() {
 	if(function_exists('register_sidebar_widget')) {
-		register_sidebar_widget(TXT_WPSC_ADMINMENU, 'widget_admin_menu');
+		register_sidebar_widget(__('Admin Menu', 'wpsc'), 'widget_admin_menu');
 		#register_widget_control('Admin Menu', 'widget_admin_menu', 300, 90);
 	}
 	return;

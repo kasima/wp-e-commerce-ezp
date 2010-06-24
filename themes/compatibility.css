@@ -18,6 +18,9 @@ li.widget_wp_shopping_cart ul li:before{
 	content: "" !important;
 }
 
+.wpsc_ccBox{
+width:auto !important;
+}
 
 div.categorydisplay ul li:before{
 	/* Countermand any content properties like the one in the default wordpress theme.  */
@@ -39,4 +42,8 @@ div.wpsc_loading_animation {
 #idc-container-parent{
 clear:both;
 
+}
+table.wpsc_checkout_table label{
+display:inline;
+padding-right:10px;
 }

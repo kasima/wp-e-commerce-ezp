@@ -44,16 +44,21 @@ $wpsc_database_template[$table_name]['columns']['custom_message'] = "text NOT NU
 $wpsc_database_template[$table_name]['columns']['files'] = "text NOT NULL ";
 $wpsc_database_template[$table_name]['columns']['meta'] = "longtext NULL ";
 $wpsc_database_template[$table_name]['indexes']['PRIMARY'] = "PRIMARY KEY ( `id` )";
+$wpsc_database_template[$table_name]['indexes']['purchaseid'] = "KEY `purchaseid` ( `purchaseid` )";
 $wpsc_database_template[$table_name]['previous_names'] = "{$wpdb->prefix}cart_contents";
 
 
-// code to create or update the {$wpdb->prefix}wpsc_cart_item_extras table
-$table_name = WPSC_TABLE_CART_ITEM_EXTRAS;
-$wpsc_database_template[$table_name]['columns']['id'] = "int(11) NOT NULL auto_increment";
-$wpsc_database_template[$table_name]['columns']['cart_id'] = "int(11) NOT NULL DEFAULT '0' ";
-$wpsc_database_template[$table_name]['columns']['extra_id'] = "int(11) NOT NULL DEFAULT '0' ";
-$wpsc_database_template[$table_name]['indexes']['PRIMARY'] = "PRIMARY KEY ( `id` )";
-$wpsc_database_template[$table_name]['previous_names'] = "{$wpdb->prefix}cart_item_extras";
+// code to create or update the {$wpdb->prefix}wpsc_meta table
+
+$table_name = WPSC_TABLE_META;
+$wpsc_database_template[$table_name]['columns']['meta_id'] = "bigint(20) NOT NULL auto_increment";
+$wpsc_database_template[$table_name]['columns']['object_type'] = "varchar(24) NOT NULL default 'cart_Item'";
+$wpsc_database_template[$table_name]['columns']['object_id'] = "bigint(20) NOT NULL default '0'";
+$wpsc_database_template[$table_name]['columns']['meta_key'] = "varchar(255) default NULL";
+$wpsc_database_template[$table_name]['columns']['meta_value'] = "longtext";
+$wpsc_database_template[$table_name]['indexes']['PRIMARY'] = "PRIMARY KEY  (`meta_id`)";
+$wpsc_database_template[$table_name]['indexes']['object_type__meta_key'] = "KEY `object_type__meta_key` (`object_type`,`meta_key`)";
+$wpsc_database_template[$table_name]['indexes']['object_type__object_id__meta_key'] = "KEY `object_type__object_id__meta_key` (`object_type`,`object_id`,`meta_key`)";
 
 
 // code to create or update the {$wpdb->prefix}wpsc_cart_item_variations table
@@ -69,7 +74,7 @@ $wpsc_database_template[$table_name]['previous_names'] = "{$wpdb->prefix}cart_it
 // code to create or update the {$wpdb->prefix}wpsc_checkout_forms table
 $table_name = WPSC_TABLE_CHECKOUT_FORMS;
 $wpsc_database_template[$table_name]['columns']['id'] = "bigint(20) unsigned NOT NULL auto_increment";
-$wpsc_database_template[$table_name]['columns']['name'] = "varchar(255) NOT NULL DEFAULT '' ";
+$wpsc_database_template[$table_name]['columns']['name'] = "text NOT NULL";
 $wpsc_database_template[$table_name]['columns']['type'] = "varchar(64) NOT NULL DEFAULT '' ";
 $wpsc_database_template[$table_name]['columns']['mandatory'] = "varchar(1) NOT NULL DEFAULT '0' ";
 $wpsc_database_template[$table_name]['columns']['display_log'] = "char(1) NOT NULL DEFAULT '0' ";
@@ -77,6 +82,9 @@ $wpsc_database_template[$table_name]['columns']['default'] = "varchar(128) NOT N
 $wpsc_database_template[$table_name]['columns']['active'] = "varchar(1) NOT NULL DEFAULT '1' ";
 $wpsc_database_template[$table_name]['columns']['order'] = "int(10) unsigned NOT NULL DEFAULT '0' ";
 $wpsc_database_template[$table_name]['columns']['unique_name'] = "varchar(255) NOT NULL DEFAULT '' ";
+$wpsc_database_template[$table_name]['columns']['options'] = "varchar(255) NOT NULL DEFAULT '' ";
+$wpsc_database_template[$table_name]['columns']['checkout_set'] = "VARCHAR( 64 ) NOT NULL DEFAULT '0'";
+
 $wpsc_database_template[$table_name]['indexes']['PRIMARY'] = "PRIMARY KEY  ( `id` )";
 $wpsc_database_template[$table_name]['indexes']['order'] = " KEY `order` ( `order` )";
 $wpsc_database_template[$table_name]['actions']['after']['all'] = "wpsc_add_checkout_fields";
@@ -232,6 +240,7 @@ $wpsc_database_template[$table_name]['columns']['productid'] = "bigint(20) unsig
 $wpsc_database_template[$table_name]['columns']['rated'] = "tinyint(1) NOT NULL DEFAULT '0' ";
 $wpsc_database_template[$table_name]['columns']['time'] = "bigint(20) unsigned NOT NULL DEFAULT '0' ";
 $wpsc_database_template[$table_name]['indexes']['PRIMARY'] = "PRIMARY KEY  ( `id` )";
+$wpsc_database_template[$table_name]['indexes']['rating_time'] = "KEY `rating_time` ( `time` )";
 $wpsc_database_template[$table_name]['previous_names'] = "{$wpdb->prefix}product_rating";
 
 
@@ -277,6 +286,8 @@ $wpsc_database_template[$table_name]['columns']['notes'] = "text NULL";
 $wpsc_database_template[$table_name]['indexes']['PRIMARY'] = "PRIMARY KEY  ( `id` )";
 $wpsc_database_template[$table_name]['indexes']['sessionid'] = "UNIQUE KEY `sessionid` ( `sessionid` )";
 $wpsc_database_template[$table_name]['indexes']['gateway'] = " KEY `gateway` ( `gateway` )";
+$wpsc_database_template[$table_name]['indexes']['date'] = " KEY `date` ( `date` )";
+$wpsc_database_template[$table_name]['indexes']['processed_and_date'] = " KEY `processed_and_date` ( `processed`,`date` )";
 $wpsc_database_template[$table_name]['previous_names'] = "{$wpdb->prefix}purchase_logs";
 
 
@@ -368,7 +379,7 @@ $wpsc_database_template[$table_name]['previous_names'] = "{$wpdb->prefix}variati
 $table_name = WPSC_TABLE_COUPON_CODES;
 $wpsc_database_template[$table_name]['columns']['id'] = "bigint(20) unsigned NOT NULL auto_increment";
 $wpsc_database_template[$table_name]['columns']['coupon_code'] = "varchar(255) NULL DEFAULT '' ";
-$wpsc_database_template[$table_name]['columns']['value'] = "bigint(20) unsigned NOT NULL DEFAULT '0' ";
+$wpsc_database_template[$table_name]['columns']['value'] = "decimal(11,2) NOT NULL DEFAULT '0' ";
 $wpsc_database_template[$table_name]['columns']['is-percentage'] = "char(1) NOT NULL DEFAULT '0' ";
 $wpsc_database_template[$table_name]['columns']['use-once'] = "char(1) NOT NULL DEFAULT '0' ";
 $wpsc_database_template[$table_name]['columns']['is-used'] = "char(1) NOT NULL DEFAULT '0' ";

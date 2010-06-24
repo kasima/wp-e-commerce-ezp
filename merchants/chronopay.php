@@ -424,8 +424,8 @@ function form_chronopay()
 		<tr>
 			<td>Debug Mode</td>
 			<td>
-				<input type='radio' value='1' name='chronopay_debug' id='chronopay_debug1' ".$chronopay_debug1." /> <label for='chronopay_debug1'>".TXT_WPSC_YES."</label> &nbsp;
-				<input type='radio' value='0' name='chronopay_debug' id='chronopay_debug2' ".$chronopay_debug2." /> <label for='chronopay_debug2'>".TXT_WPSC_NO."</label>
+				<input type='radio' value='1' name='chronopay_debug' id='chronopay_debug1' ".$chronopay_debug1." /> <label for='chronopay_debug1'>".__('Yes', 'wpsc')."</label> &nbsp;
+				<input type='radio' value='0' name='chronopay_debug' id='chronopay_debug2' ".$chronopay_debug2." /> <label for='chronopay_debug2'>".__('No', 'wpsc')."</label>
 			</td>
 		</tr>
 		<tr>
@@ -437,7 +437,7 @@ function form_chronopay()
 	<tr class='update_gateway' >
 		<td colspan='2'>
 			<div class='submit'>
-			<input type='submit' value='".TXT_WPSC_UPDATE_BUTTON."' name='updateoption'/>
+			<input type='submit' value='".__('Update &raquo;', 'wpsc')."' name='updateoption'/>
 		</div>
 		</td>
 	</tr>

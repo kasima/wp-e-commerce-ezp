@@ -3,6 +3,12 @@ function widget_wp_shopping_cart($args) {
     global $wpsc_theme_path, $cache_enabled;
     extract($args);
     $options = get_option('widget_wp_shopping_cart');
+  //  exit('count: '.wpsc_cart_item_count().' hideonempty<pre>'.print_r($options, true).'</pre>');
+    
+	if(($options['hideonempty']== 1) && (wpsc_cart_item_count() < 1))
+		return;
+	
+    
       
 		if(get_option('show_sliding_cart') == 1)	{
 			if(is_numeric($_SESSION['slider_state']))	{
@@ -55,6 +61,12 @@ function widget_wp_shopping_cart_control() {
 	$options = $newoptions = get_option('widget_wp_shopping_cart');
 	if ( $_POST["wp_shopping_cart-submit"] ) {
 		$newoptions['title'] = strip_tags(stripslashes($_POST["wp_shopping_cart-title"]));
+		if ($_POST['wp_shopping_cart-hideonempty'])  {
+			$newoptions['hideonempty'] = TRUE;
+		} else {
+			$newoptions['hideonempty'] = FALSE;
+		}
+
 	}
 	if ( $options != $newoptions ) {
 		$options = $newoptions;
@@ -63,7 +75,13 @@ function widget_wp_shopping_cart_control() {
 	$title = htmlspecialchars($options['title'], ENT_QUOTES);
 	
 	echo "<p>\n\r";
-	echo "  <label for='wp_shopping_cart-title'>"._e('Title:')."<input class='widefat' id='wp_shopping_cart-title' name='wp_shopping_cart-title' type='text' value='{$title}' />\n\r";
+	echo "  <label for='wp_shopping_cart-title'>"._e('Title:', 'wpsc')."<input class='widefat' id='wp_shopping_cart-title' name='wp_shopping_cart-title' type='text' value='{$title}' /></label><br/><br/>\n\r";
+	echo "  <label for='wp_shopping_cart-hideonempty'>"._e('Hide Cart When Empty:')."<input id='wp_shopping_cart-hideonempty' name='wp_shopping_cart-hideonempty' type='checkbox' ";
+	if ($options['hideonempty']) {
+		echo " checked='checked' ";
+	}
+	echo "/></label><br/>\n\r";
+
 	echo "    <input type='hidden' id='wp_shopping_cart-submit' name='wp_shopping_cart-submit' value='1' />\n\r";
 	echo "  </label>\n\r";
 	echo "</p>\n\r";

@@ -6,7 +6,7 @@ function widget_product_tag($args)
   global $wpdb, $table_prefix;
   extract($args);
   $options = get_option('wpsc-widget_product_tag');  
-  $title = empty($options['title']) ? __(TXT_WPSC_PRODUCT_TAGS) : $options['title'];
+  $title = empty($options['title']) ? __(__('Product Tags', 'wpsc')) : $options['title'];
   echo $before_widget; 
   $full_title = $before_title . $title . $after_title;
   echo $full_title;
@@ -35,8 +35,8 @@ function widget_product_tag_control() {
    if(function_exists('register_sidebar_widget')) {
 		//$widget_ops = array('classname' => 'widget_pages', 'description' => __( "Your blog's WordPress Pages") );
 		//wp_register_sidebar_widget('pages', __('Pages'), 'wp_widget_pages', $widget_ops);
-    register_sidebar_widget(TXT_WPSC_PRODUCT_TAGS, 'widget_product_tag');
-    register_widget_control(TXT_WPSC_PRODUCT_TAGS, 'widget_product_tag_control');
+    register_sidebar_widget(__('Product Tags', 'wpsc'), 'widget_product_tag');
+    register_widget_control(__('Product Tags', 'wpsc'), 'widget_product_tag_control');
 	}
 	return;
 }

@@ -187,7 +187,6 @@ class nzshpcrt_variations {
 					$limited_stock = true;
 				}
 			}
-
 			$associated_variations = $wpdb->get_col("SELECT `variation_id` FROM `".WPSC_TABLE_VARIATION_ASSOC."` WHERE `type` IN ('product') AND `associated_id` = '{$product_id}' ORDER BY `id` ASC");
 		} else {
 			$associated_variations = $variation_ids;
@@ -214,11 +213,11 @@ class nzshpcrt_variations {
     if($variation_count > 0) {
       $output .= "<table class='product_variation_grid'>\n\r";   
       $output .= "  <tr>\n\r";
-      $output .= "    <th class='variations titles'>".TXT_WPSC_VARIATION."</th>\n\r";
-      $output .= "    <th class='titles stock' $stock_column_state >".TXT_WPSC_STOCK."</th>\n\r";
-      $output .= "    <th class='titles price'>".TXT_WPSC_PRICE."</th>\n\r";
-      //$output .= "    <th class='titles weight'>".TXT_WPSC_WEIGHT."</th>\n\r";
-      $output .= "    <th class='titles'>".TXT_WPSC_MORE."&nbsp;</th>\n\r";
+      $output .= "    <th class='variations titles'>".__('Variation', 'wpsc')."</th>\n\r";
+      $output .= "    <th class='titles stock' $stock_column_state >".__('Stock', 'wpsc')."</th>\n\r";
+      $output .= "    <th class='titles price'>".__('Price', 'wpsc')."</th>\n\r";
+      //$output .= "    <th class='titles weight'>".__('Weight', 'wpsc')."</th>\n\r";
+      $output .= "    <th class='titles'>".__('More', 'wpsc')."&nbsp;</th>\n\r";
       $output .= "  </tr>\n\r";
       
 
@@ -228,7 +227,7 @@ class nzshpcrt_variations {
 		$join_tables = array();
 		$join_conditions = array();
 		foreach((array)$associated_variations as $variation) {
-      $variation = (int)$variation;
+     	 $variation = (int)$variation;
       
 			$excluded_value_sql = '';
 			if($product_id > 0 ) {
@@ -237,16 +236,16 @@ class nzshpcrt_variations {
 			} else if(count($variation_values) > 0) {
 				$included_values_sql = "AND `a{$variation}`.`id` IN('".implode("','", $variation_values)."')";
 			}
-			
-      $join_selected_cols[] = "`a{$variation}`.`id` AS `id_{$variation}`, `a{$variation}`.`name` AS `name_{$variation}`";
-      $join_subselect_cols[] = "`a{$variation}`.`id`";
-      $join_tables[] = "`".WPSC_TABLE_VARIATION_VALUES."` AS `a{$variation}`";
-      $join_conditions[] = "`a{$variation}`.`variation_id` = '{$variation}' $included_values_sql";
-    }
+							
+	      $join_selected_cols[] = "`a{$variation}`.`id` AS `id_{$variation}`, `a{$variation}`.`name` AS `name_{$variation}`";
+	      $join_subselect_cols[] = "`a{$variation}`.`id`";
+	      $join_tables[] = "`".WPSC_TABLE_VARIATION_VALUES."` AS `a{$variation}`";
+	      $join_conditions[] = "`a{$variation}`.`variation_id` = '{$variation}' $included_values_sql";
+    	}
 
 		$variation_count = count($associated_variations);
 		$all_variation_ids = implode(",", $associated_variations);
-    $join_subselect_cols = implode(", ", $join_subselect_cols);
+  		$join_subselect_cols = implode(", ", $join_subselect_cols);
     
 		$join_selected_cols[] = "(
 			SELECT `priceandstock_id`
@@ -260,8 +259,7 @@ class nzshpcrt_variations {
 			HAVING COUNT( `priceandstock_id` ) = '{$variation_count}'
 			LIMIT 1
 		) AS `priceandstock_id`";
-    
-    // implode the SQL statment segments into bigger segments
+        // implode the SQL statment segments into bigger segments
     $join_selected_cols = implode(", ", $join_selected_cols);
     $join_tables = implode("\nJOIN ", $join_tables);
     $join_conditions = implode("\nAND ", $join_conditions);
@@ -273,7 +271,12 @@ class nzshpcrt_variations {
     WHERE {$join_conditions}
     ORDER BY {$join_subselect_cols}"
     , ARRAY_A);
-
+/*
+	exit("SELECT {$join_selected_cols}
+    FROM {$join_tables}
+    WHERE {$join_conditions}
+    ORDER BY {$join_subselect_cols}");
+*/
     // extract the price and stock IDs and make them into a comma seperated string.
 		$priceandstock_ids = array();
 		foreach((array)$associated_variation_values as $variation_set) {
@@ -285,7 +288,7 @@ class nzshpcrt_variations {
 		if(count($priceandstock_ids)) {
 			$unindexed_variation_properties_data = $wpdb->get_results("SELECT `id`, `stock`, `price`, `weight`,`weight_unit`, `file` FROM `".WPSC_TABLE_VARIATION_PROPERTIES."` WHERE `id` IN({$priceandstock_id_string})", ARRAY_A);
 		}
-
+	
 		// Index the variation properties data according to the price and stock ID.
 		$variation_properties_data = array();
 		foreach((array)$unindexed_variation_properties_data as $properties_data) {
@@ -337,7 +340,7 @@ class nzshpcrt_variations {
 	//       $output .= "    <td class='weight'><input type='text' name='variation_priceandstock[{$variation_ids}][weight]' value='' size='3' /></td>\n\r";
 				
 				$output .= "    <td>\n\r";
-				$output .= "      <a href='#' class='variation_edit_button' onclick='return open_variation_settings(\"variation_settings_$variation_settings_uniqueid\")' ><img src='".WPSC_URL."/images/gear__plus.png' alt='".TXT_WPSC_EDIT."' title='".TXT_WPSC_EDIT."'></a>\n\r";
+				$output .= "      <a href='#' class='variation_edit_button' onclick='return open_variation_settings(\"variation_settings_$variation_settings_uniqueid\")' ><img src='".WPSC_URL."/images/gear__plus.png' alt='".__('Edit', 'wpsc')."' title='".__('Edit', 'wpsc')."'></a>\n\r";
 				$output .= "    </td>\n\r";
 				
 				$output .= "  </tr>\n\r";
@@ -346,7 +349,7 @@ class nzshpcrt_variations {
 				$output .= "      <div class='variation_settings'>\n\r";
 				
 				$output .= "        <div class='variation_weight'>\n\r";
-				$output .= "          <strong>".TXT_WPSC_WEIGHT_SETTINGS."</strong><br />";
+				$output .= "          <strong>".__('Weight Settings', 'wpsc')."</strong><br />";
 				$output .= "          <input type='text' name='variation_priceandstock[{$variation_ids}][weight]' value='{$product_weight}' size='3' />";
 
 				$output .= "          <select name='variation_priceandstock[{$variation_ids}][weight_unit]'>\n\r";
@@ -545,7 +548,7 @@ class nzshpcrt_variations {
 						$output .= "<input type='checkbox' id='variation[".$value_association['id']."]' name='variation[".$variation_data['name']."][]'".$default_topping." value='".$value_association['id']."' onclick='manage_topping(".$product_id.",".$value_association['id'].",".$special.")'>".stripslashes($value_association['name'])."<br>";
 					} else {
 						if(($check_stock == true) && ($stock < 1)) {
-							//$output .= "<option value='".$value_association['id']."' disabled='true'>".stripslashes($value_association['name'])." - ".TXT_WPSC_NO_STOCK."</option>";
+							//$output .= "<option value='".$value_association['id']."' disabled='true'>".stripslashes($value_association['name'])." - ".__('No Stock', 'wpsc')."</option>";
 						} else {
 							$output .= "<option value='".$value_association['value_id']."'>".stripslashes($value_association['name'])."</option>";
 							if($saved_variation_price == 0) {
@@ -582,6 +585,32 @@ class nzshpcrt_variations {
 		}
 	}
    
+   function duplicate_variation_values($new_id, $old_id){
+   	global $wpdb;
+   		$sql = "SELECT * FROM `".WPSC_TABLE_VARIATION_VALUES_ASSOC."` WHERE `product_id` = ".$old_id;
+   		$results = $wpdb->get_results($sql, ARRAY_A);
+   		foreach((array)$results as $result){
+   			$sql = "INSERT INTO `".WPSC_TABLE_VARIATION_VALUES_ASSOC."` (`product_id`,`value_id`,`visible`,`variation_id`) VALUES ('".$new_id."','".$result['value_id']."','".$result['visible']."','".$result['variation_id']."')";
+   			$wpdb->query($sql);
+   		}
+   		$variation_assocs = $wpdb->get_results("SELECT * FROM ".WPSC_TABLE_VARIATION_ASSOC." WHERE associated_id = ".$old_id, ARRAY_A);
+   		foreach((array)$variation_assocs as $result){
+   			$sql ="INSERT INTO `".WPSC_TABLE_VARIATION_ASSOC."` (`type`,`name`,`associated_id`,`variation_id`) VALUES ('".$result['type']."','".$result['name']."','".$new_id."','".$result['variation_id']."')";
+   			$wpdb->query($sql);   		
+   		}
+   		$sql = "SELECT * FROM `".WPSC_TABLE_VARIATION_COMBINATIONS."` WHERE `product_id` = ".$old_id;
+   		$results = $wpdb->get_results($sql, ARRAY_A);
+   		foreach((array)$results as $result){
+   			$sql ="INSERT INTO `".WPSC_TABLE_VARIATION_COMBINATIONS."` (`product_id`,`priceandstock_id`,`value_id`,`variation_id`, `all_variation_ids`) VALUES ('".$new_id."','".$result['priceandstock_id']."','".$result['value_id']."','".$result['variation_id']."','".$result['all_variation_ids']."')";
+   			$wpdb->query($sql);  
+   		}
+   		$sql = "SELECT * FROM `".WPSC_TABLE_VARIATION_PROPERTIES."` WHERE `product_id` = ".$old_id;
+   		$results = $wpdb->get_results($sql, ARRAY_A);
+   		foreach((array)$results as $result){
+   			$sql ="INSERT INTO `".WPSC_TABLE_VARIATION_PROPERTIES."` (`product_id`,`stock`,`price`, `weight`,`weight_unit`,`visibility`,`file`) VALUES ('".$new_id."','".$result['stock']."','".$result['price']."','".$result['weight']."','".$result['weight_unit']."','".$result['visibility']."','".$result['file']."')";
+   			$wpdb->query($sql);  
+   		}
+   }
 	  /**
   * this function updates the wp_variation_priceandstock table based on what is passed to it
   * this is used on the add and edit products page, This must be passed a product ID and variation values array

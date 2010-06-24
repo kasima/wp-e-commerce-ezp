@@ -5,8 +5,7 @@ $nzshpcrt_gateways[$num]['function'] = 'gateway_paypal_multiple';
 $nzshpcrt_gateways[$num]['form'] = "form_paypal_multiple";
 $nzshpcrt_gateways[$num]['submit_function'] = "submit_paypal_multiple";
 $nzshpcrt_gateways[$num]['payment_type'] = "paypal";
-//$nzshpcrt_gateways[$num]['supported_currencies']['currency_list'] = array('USD', 'CAD', 'AUD', 'EUR', 'GBP', 'JPY', 'NZD', 'CHF', 'HKD', 'SGD', 'SEK', 'HUF', 'DKK', 'PLN', 'NOK', 'CZK', 'MXN');
-$nzshpcrt_gateways[$num]['supported_currencies']['currency_list'] = array('AUD', 'BRL', 'CAD', 'CHF', 'CZK', 'DKK', 'EUR', 'GBP', 'HKD', 'HUF', 'ILS', 'JPY', 'MXN', 'MYR', 'NOK', 'NZD', 'PHP', 'PLN', 'SEK', 'SGD', 'THB', 'TWD', 'USD');
+$nzshpcrt_gateways[$num]['supported_currencies']['currency_list'] = array('USD', 'CAD', 'AUD', 'EUR', 'GBP', 'JPY', 'NZD', 'CHF', 'HKD', 'SGD', 'SEK', 'HUF', 'DKK', 'PLN', 'NOK', 'CZK', 'MXN');
 $nzshpcrt_gateways[$num]['supported_currencies']['option_name'] = 'paypal_curcode';
 
 
@@ -36,9 +35,10 @@ function gateway_paypal_multiple($seperator, $sessionid) {
   $data['notify_url'] =urlencode(get_option('siteurl')."/?ipn_request=true");
   $data['rm'] = '2';
   //data['bn'] = 'Instinct-WP-e-commerce_ShoppingCart_EC';
+  
   // look up the currency codes and local price
 
-  $currency_code = $wpdb->get_results("SELECT `code` FROM `".WPSC_TABLE_CURRENCY_LIST."` WHERE `id`='".(int)get_option('currency_type')."' LIMIT 1",ARRAY_A);
+  $currency_code = $wpdb->get_results("SELECT `code` FROM `".WPSC_TABLE_CURRENCY_LIST."` WHERE `id`='".get_option('currency_type')."' LIMIT 1",ARRAY_A);
   $local_currency_code = $currency_code[0]['code'];
   $paypal_currency_code = get_option('paypal_curcode');
   
@@ -54,11 +54,14 @@ function gateway_paypal_multiple($seperator, $sessionid) {
 //   $data['lc'] = 'US';
   $data['lc'] = $paypal_currency_code;
   $data['bn'] = 'wp-e-commerce';
-  
-  $data['no_shipping'] = (int)(bool)get_option('paypal_ship');
   if(get_option('address_override') == 1) {
 		$data['address_override'] = '1';
-	}
+  }
+  if((int)(bool)get_option('paypal_ship') == '1'){
+    $data['no_shipping'] = '0';
+	$data['address_override'] = '1';
+  }
+
   $data['no_note'] = '1';
   
   switch($paypal_currency_code) {
@@ -119,13 +122,13 @@ function gateway_paypal_multiple($seperator, $sessionid) {
 				$paypal_currency_productprice = $curr->convert($local_currency_productprice,$paypal_currency_code,$local_currency_code);
 				$paypal_currency_shipping = $curr->convert($local_currency_shipping,$paypal_currency_code,$local_currency_code);
 			//	exit($paypal_currency_productprice . " " . $paypal_currency_shipping.' '.$local_currency_productprice . " " . $local_currency_code);
-				 $base_shipping = $curr->convert($purchase_log['base_shipping'],$paypal_currency_code, $local_currency_code);
+				 $base_shipping = $curr->convert($wpsc_cart->calculate_base_shipping(),$paypal_currency_code, $local_currency_code);
 				 	//exit($paypal_currency_productprice.' Local>'.$local_currency_productprice.' Base shp'.$base_shipping);
 				 $tax_price = $curr->convert($item['tax_charged'],$paypal_currency_code, $local_currency_code);
 			} else {
 				$paypal_currency_productprice = $local_currency_productprice;
 				$paypal_currency_shipping = $local_currency_shipping;
-				$base_shipping = $purchase_log['base_shipping'];
+				$base_shipping = $wpsc_cart->calculate_base_shipping();
 				 $tax_price = $item['tax_charged'];
 			}
 			//exit("<pre>".print_r(, true).'</pre>');
@@ -162,6 +165,7 @@ function gateway_paypal_multiple($seperator, $sessionid) {
   $data['invoice'] = $sessionid;
   
   // User details   
+  
   if($_POST['collected_data'][get_option('paypal_form_first_name')] != '') {
     $data['first_name'] = urlencode($_POST['collected_data'][get_option('paypal_form_first_name')]);
 	}
@@ -187,7 +191,9 @@ function gateway_paypal_multiple($seperator, $sessionid) {
 	
      
     if($_POST['collected_data'][get_option('paypal_form_state')] != '') {   
-    	$data['state'] =  urlencode($_POST['collected_data'][get_option('paypal_form_state')]); 
+    	if(!is_array($_POST['collected_data'][get_option('paypal_form_state')])){
+    		$data['state'] =  urlencode($_POST['collected_data'][get_option('paypal_form_state')]); 
+    	}
     }   
       if($_POST['collected_data'][get_option('paypal_form_country')] != '') {
     	if(is_array($_POST['collected_data'][get_option('paypal_form_country')])) {
@@ -218,6 +224,8 @@ function gateway_paypal_multiple($seperator, $sessionid) {
   $data['upload'] = '1';
   $data['cmd'] = "_ext-enter";
   $data['redirect_cmd'] = "_cart";
+  $data = apply_filters('wpsc_paypal_standard_post_data',$data);
+
   $datacount = count($data);
   $num = 0;
   foreach($data as $key=>$value) {
@@ -240,7 +248,7 @@ function gateway_paypal_multiple($seperator, $sessionid) {
 		} else {
 			$permsub = '';
 		}
-		$output = 'cmd=_xclick-subscriptions&business='.urlencode($data['business']).'&no_note=1&item_name='.urlencode($data['item_name_1']).'&return='.urlencode($data['return']).'&cancel_return='.urlencode($data['cancel_return']).$permsub.'&a3='.urlencode($data['amount_1']).'&p3='.urlencode($membership_length['length']).'&t3='.urlencode(strtoupper($membership_length['unit']));
+			$output = 'cmd=_xclick-subscriptions&currency_code='.urlencode($data['currency_code']).'&lc='.urlencode($data['lc']).'&business='.urlencode($data['business']).'&no_note=1&item_name='.urlencode($data['item_name_1']).'&return='.urlencode($data['return']).'&cancel_return='.urlencode($data['cancel_return']).$permsub.'&a3='.urlencode($data['amount_1']).'&p3='.urlencode($membership_length['length']).'&t3='.urlencode(strtoupper($membership_length['unit']));
 	}
 	if(defined('WPSC_ADD_DEBUG_PAGE') and (WPSC_ADD_DEBUG_PAGE == true) ) {
   	echo "<a href='".get_option('paypal_multiple_url')."?".$output."'>Test the URL here</a>";
@@ -467,16 +475,16 @@ function form_paypal_multiple() {
      <td>IPN :
      </td>
      <td>
-       <input type='radio' value='1' name='paypal_ipn' id='paypal_ipn1' ".$paypal_ipn1." /> <label for='paypal_ipn1'>".TXT_WPSC_YES."</label> &nbsp;
-       <input type='radio' value='0' name='paypal_ipn' id='paypal_ipn2' ".$paypal_ipn2." /> <label for='paypal_ipn2'>".TXT_WPSC_NO."</label>
+       <input type='radio' value='1' name='paypal_ipn' id='paypal_ipn1' ".$paypal_ipn1." /> <label for='paypal_ipn1'>".__('Yes', 'wpsc')."</label> &nbsp;
+       <input type='radio' value='0' name='paypal_ipn' id='paypal_ipn2' ".$paypal_ipn2." /> <label for='paypal_ipn2'>".__('No', 'wpsc')."</label>
      </td>
   </tr>
   <tr>
      <td style='padding-bottom: 0px;'>Send shipping details:
      </td>
      <td style='padding-bottom: 0px;'>
-       <input type='radio' value='1' name='paypal_ship' id='paypal_ship1' ".$paypal_ship1." /> <label for='paypal_ship1'>".TXT_WPSC_YES."</label> &nbsp;
-       <input type='radio' value='0' name='paypal_ship' id='paypal_ship2' ".$paypal_ship2." /> <label for='paypal_ship2'>".TXT_WPSC_NO."</label>
+       <input type='radio' value='1' name='paypal_ship' id='paypal_ship1' ".$paypal_ship1." /> <label for='paypal_ship1'>".__('Yes', 'wpsc')."</label> &nbsp;
+       <input type='radio' value='0' name='paypal_ship' id='paypal_ship2' ".$paypal_ship2." /> <label for='paypal_ship2'>".__('No', 'wpsc')."</label>
 
   	</td>
   </tr>
@@ -491,8 +499,8 @@ function form_paypal_multiple() {
       Address Override:
      </td>
      <td style='padding-bottom: 0px;'>
-       <input type='radio' value='1' name='address_override' id='address_override1' ".$address_override1." /> <label for='address_override1'>".TXT_WPSC_YES."</label> &nbsp;
-       <input type='radio' value='0' name='address_override' id='address_override2' ".$address_override2." /> <label for='address_override2'>".TXT_WPSC_NO."</label>
+       <input type='radio' value='1' name='address_override' id='address_override1' ".$address_override1." /> <label for='address_override1'>".__('Yes', 'wpsc')."</label> &nbsp;
+       <input type='radio' value='0' name='address_override' id='address_override2' ".$address_override2." /> <label for='address_override2'>".__('No', 'wpsc')."</label>
      </td>
    </tr>
    <tr>
@@ -551,7 +559,7 @@ $output .= "
    <tr class='update_gateway' >
 		<td colspan='2'>
 			<div class='submit'>
-			<input type='submit' value='".TXT_WPSC_UPDATE_BUTTON."' name='updateoption'/>
+			<input type='submit' value='".__('Update &raquo;', 'wpsc')."' name='updateoption'/>
 		</div>
 		</td>
 	</tr>

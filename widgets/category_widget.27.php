@@ -16,7 +16,7 @@ function widget_wpsc_categorisation( $args, $widget_args = 1 ) {
 	$my_options = $options[$number];
 	
 	
-  $title = empty($my_options['title']) ? TXT_WPSC_CATEGORISATION : $my_options['title'];
+  $title = empty($my_options['title']) ? __('Categories', 'wpsc') : $my_options['title'];
 	
 	echo $before_widget;
   $full_title = $before_title . $title . $after_title;
@@ -143,7 +143,7 @@ function widget_wpsc_categorisation_control( $widget_args = 1 ) {
 	  $checked = '';
 	  //$checked = "checked='checked'";
 		$category_count = $wpdb->get_var("SELECT COUNT(*) FROM `".WPSC_TABLE_PRODUCT_CATEGORIES."` WHERE `group_id` IN ('{$cat_group['id']}')");
-		//$category_group_name = str_replace("[categorisation]", , TXT_WPSC_DISPLAY_PRODUCT_CATEGORIES);
+		//$category_group_name = str_replace("[categorisation]", , __('Display &quot;[categorisation]&quot;', 'wpsc'));
 		
 		if($options[$number]['categorisation'][$cat_group['id']] == true) {
 			$checked = "checked='checked'";
@@ -156,7 +156,7 @@ function widget_wpsc_categorisation_control( $widget_args = 1 ) {
 		$form_id = "{$option_name}-{$number}-group{$cat_group['id']}";
 		echo "	<label for='{$form_id}'>\n\r";
 		echo "		<input type='checkbox' name='{$option_name}[$number][categorisation][{$cat_group['id']}]' id='{$form_id}' value='true' class='checkbox' {$checked} />\n\r";
-		echo "		".str_replace(":category:",$cat_group['name'],TXT_WPSC_DISPLAY_THE_GROUP)."</label>\n\r";
+		echo "		".str_replace(":category:",$cat_group['name'],__('Display the :category: Group', 'wpsc'))."</label>\n\r";
 		echo "	<br/>\n\r";
 	}
 	if ($options[$number]['image'] == true) {
@@ -165,7 +165,7 @@ function widget_wpsc_categorisation_control( $widget_args = 1 ) {
 	echo "<br />\n\r";
 	echo "	<label for='sidebar_category_image'>\n\r";
 	echo "		<input type='checkbox' name='{$option_name}[$number][image]' id='sidebar_category_image' value='true' class='checkbox' {$checked} />\n\r";
-	echo "		".TXT_WPSC_DISPLAY_THE_GROUP_IMAGES."</label>\n\r";
+	echo "		".__('Display the Group thumbnails in the sidebar', 'wpsc')."</label>\n\r";
 	echo "	<br/>\n\r";
 	echo "		<input type='hidden' name='{$option_name}[$number][check]' value='1' />\n\r";
 }
@@ -176,7 +176,7 @@ function widget_wpsc_categorisation_register() {
 	$option_name = 'widget_wpsc_categorisation';
 	if ( !$options = get_option($option_name))
 		$options = array();
-	$widget_ops = array('classname' => 'widget_wpsc_categorisation', 'description' => __(TXT_WPSC_CATEGORISATION_DESCR));
+	$widget_ops = array('classname' => 'widget_wpsc_categorisation', 'description' => __(__('Product Grouping Widget', 'wpsc')));
 	$control_ops = array('width' => 232, 'height' => 350, 'id_base' => 'wpsc_categorisation');
 	$name = __("Product Categories", 'wpsc');
 

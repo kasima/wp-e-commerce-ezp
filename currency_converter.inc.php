@@ -96,7 +96,7 @@
 
 				$data = @preg_replace($search, $replace, $data);
 				@preg_match_all("/(\d[^\.]*(\.\d+)?)/",$data,$mathces);
-				$return=preg_replace("/[^\d\.]*/","",$mathces[0][1]);
+				$return=preg_replace("/[^\d\.]*/","",$mathces[0][4]);
 				return (double)$return;
 			}
 		}

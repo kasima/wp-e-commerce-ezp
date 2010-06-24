@@ -44,9 +44,9 @@ function wpsc_save_variation_set() {
 			}
       $wpdb->query("INSERT INTO `".WPSC_TABLE_VARIATION_VALUES."` ( `name` , `variation_id` )  VALUES ".implode(", ", $variation_value_sql_items));
       
-      //echo "<div class='updated'><p align='center'>".TXT_WPSC_ITEMHASBEENADDED."</p></div>";
+      //echo "<div class='updated'><p align='center'>".__('The item has been added', 'wpsc')."</p></div>";
 		} else {
-			//echo "<div class='updated'><p align='center'>".TXT_WPSC_ITEMHASNOTBEENADDED."</p></div>";
+			//echo "<div class='updated'><p align='center'>".__('The item has not been added', 'wpsc')."</p></div>";
 		}
 	}
     
@@ -81,7 +81,7 @@ function wpsc_save_variation_set() {
     $updatesql = "UPDATE `".WPSC_TABLE_PRODUCT_VARIATIONS."` SET `name` = '".$wpdb->escape($_POST['name'])."' WHERE `id`='".$variation_id."' LIMIT 1";
     $wpdb->query($updatesql);
   
-    //echo "<div class='updated'><p align='center'>".TXT_WPSC_VARIATIONHASBEENEDITED."</p></div>";
+    //echo "<div class='updated'><p align='center'>".__('The variation has been edited.', 'wpsc')."</p></div>";
 	}
 	
 	if($product_id > 0) {

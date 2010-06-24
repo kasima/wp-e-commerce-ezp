@@ -2,6 +2,21 @@
 /*
 This is a language file for the WP Shopping Cart plugin version 3.7
 */
+
+/* Changes for QR code and no-stock products to draft products*/
+define('TXT_WPSC_UNPUBLISHIFOOS', 'If this product runs out of stock set status to Unpublished & email site owner');
+define('TXT_WPSC_OOS_EMAIL_SUBJ', ' is out of stock');
+define('TXT_WPSC_OOS_EMAIL1','Remaining stock of ');
+define('TXT_WPSC_OOS_EMAIL2',' is 0. Product variation was set to invisible.');
+define('TXT_WPSC_OOS_EMAIL3',' and its variations is 0. Product was unpublished.');
+define('TXT_WPSC_OOS_EMAIL4',' is 0. Product was unpublished.');
+define('TXT_WPSC_STOCKQTY', 'Stock Qty');
+
+define('TXT_WPSC_RADIO','Radio Button');
+define('TXT_WPSC_CHECKBOX','Checkbox');
+define('TXT_WPSC_SELECT','Select');
+
+define('TXT_WPSC_TICKETS','Tickets');
 define('TXT_WPSC_DELETE_CURRENCY','Delete Currency');
 define('TXT_WPSC_NO_ZIPCODE','Please provide a Zipcode and click Calculate in order to continue.');
 
@@ -143,11 +158,10 @@ define("TXT_WPSC_AND_ABOVE", " and above");
 define("TXT_WPSC_DISPLAY_THE_GROUP_IMAGES", "Display the Group thumbnails in the sidebar");
 define("TXT_WPSC_DISPLAY_THE_GROUP", "Display the :category: Group");
 
-define('TXT_WPSC_UPS_AND_WEIGHT_ERROR_MESSAGE', "UPS does not support products without a weight set.\n\r  Please either disable shipping for this product or give it a weight.");
+
 define('TXT_WPSC_OUT_OF_STOCK_ERROR_MESSAGE', 'This product has no available stock');
 
 define('TXT_WPSC_SHIPPING_ERROR_MESSAGE', 'Oops. We have encountered a problem with the shipping details you provided. If this problem persists you should contact the site owner.');
-define('TXT_WPSC_UPS_AND_NO_WEIGHT', 'This product has a zero weight associated with it and you have UPS shipping enabled. UPS does not support products with zero weight, therefore if your product is a digital download, we would reccomend disabling shipping for this product.');
 
 define('TXT_WPSC_CHOOSE_A_SHIPPING_RATE', '- Choose a Shipping Rate');
 
@@ -158,25 +172,6 @@ define('TXT_WPSC_GROUP_IMAGE', 'Group&nbsp;Image');
 define('TXT_WPSC_THUMBNAIL_SIZE', 'Thumbnail&nbsp;Size');
 define('TXT_WPSC_CATALOG_VIEW', 'Catalog View');
 define('TXT_WPSC_GROUP_IMAGE_TEXT', 'You can upload thumbnail images for each group. To display Group details in your shop you must configure these settings under <a href="admin.php?page=wpsc-settings&tab=presentation">Presentation Settings</a>.');
-
-
-
-define('TXT_WPSC_UPS_DESTINATION', 'Destination Type');
-define('TXT_WPSC_UPS_DESTINATION_COMMERCIAL', 'Commercial Address');
-define('TXT_WPSC_UPS_DESTINATION_RESIDENTIAL', 'Residential Address');
-
-define('TXT_WPSC_UPS_PACKAGING', 'Packaging');
-
-define('TXT_WPSC_UPS_PACKAGING_YOURS', 'Your Packaging');
-define('TXT_WPSC_UPS_PACKAGING_LETTER', 'UPS Letter');
-define('TXT_WPSC_UPS_PACKAGING_UEB_SMALL', 'UPS Express Box - Small');
-define('TXT_WPSC_UPS_PACKAGING_UEB_MEDIUM', 'UPS Express Box - Medium');
-define('TXT_WPSC_UPS_PACKAGING_UEB_LARGE', 'UPS Express Box - Large');
-define('TXT_WPSC_UPS_PACKAGING_TUBE', 'UPS Tube');
-define('TXT_WPSC_UPS_PACKAGING_PAK', 'UPS Pak');
-
-define('TXT_WPSC_UPS_DAILY_PICKUP', 'Daily Pickup');
-
 
 define('TXT_WPSC_IMPORT_CSV', 'Import Products CSV');
 define('TXT_WPSC_IMPORT_CSV_DESCRIPTION', '<p>You can import your products from a comma delimited text file.</p><p>An example of a cvs import file would look like this: </p><p>Description, Additional Description, Product Name, Price, SKU, weight, weight unit, stock quantity, is limited quantity</p>');
@@ -1197,4 +1192,39 @@ define('TXT_WPSC_WEIGHT', 'Weight');
 define('TXT_WPSC_LOG_TRANSACTIONACCEPTEDLOGS', 'Display only accepted transactions');
 define('TXT_WPSC_SEARCHEMAIL', 'Search By Email');
 
+/*############################################################################*\
+|* UPS Text                                                                   *|
+\*############################################################################*/
+// Weight Messages
+define('TXT_WPSC_UPS_AND_WEIGHT_ERROR_MESSAGE', "UPS does not support products without a weight set.\n\r  Please either disable shipping for this product or give it a weight.");
+define('TXT_WPSC_UPS_AND_NO_WEIGHT', 'This product has a zero weight associated with it and you have UPS shipping enabled. UPS does not support products with zero weight, therefore if your product is a digital download, we would reccomend disabling shipping for this product.');
+// Destination
+define('TXT_WPSC_UPS_DESTINATION', 'Destination Type');
+define('TXT_WPSC_UPS_DESTINATION_COMMERCIAL', 'Commercial Address');
+define('TXT_WPSC_UPS_DESTINATION_RESIDENTIAL', 'Residential Address');
+// Packaging types
+define('TXT_WPSC_UPS_PACKAGING', 'Packaging');
+define('TXT_WPSC_UPS_PACKAGING_UNKNOWN', '**UNKNOWN**');
+define('TXT_WPSC_UPS_PACKAGING_YOURS', 'Your Packaging');
+define('TXT_WPSC_UPS_PACKAGING_LETTER', 'UPS Letter');
+define('TXT_WPSC_UPS_PACKAGING_UEB_SMALL', 'UPS Express Box - Small');
+define('TXT_WPSC_UPS_PACKAGING_UEB_MEDIUM', 'UPS Express Box - Medium');
+define('TXT_WPSC_UPS_PACKAGING_UEB_LARGE', 'UPS Express Box - Large');
+define('TXT_WPSC_UPS_PACKAGING_TUBE', 'UPS Tube');
+define('TXT_WPSC_UPS_PACKAGING_PAK', 'UPS Pak');
+define('TXT_WPSC_UPS_PACKAGING_EXPRESS', 'UPS Express Box');
+// Services Info
+define('TXT_WPSC_UPS_SERVICE_NOTE', 'All services used if no services selected');
+// Pickup Type
+define('TXT_WPSC_UPS_DAILY_PICKUP', 'Daily Pickup');
+// Form Labels
+define('TXT_WPSC_UPSSERVICES', 'UPS Preferred Services');
+define('TXT_WPSC_UPSUSERNAME', 'UPS Username');
+define('TXT_WPSC_UPSPASSWORD', 'UPS Password');
+define('TXT_WPSC_UPSENV', 'Use Testing Environment');
+define('TXT_WPSC_UPSID', 'UPS XML API Key');
+define('TXT_WPSC_UPSNOTE', "Don't have an API login/ID ? <a href=\"https://www.ups.com/upsdeveloperkit?loc=en_US\" target=\"_blank\">Click Here</a> ");
+/*############################################################################*\
+|* END UPS Text                                                               *|
+\*############################################################################*/
 ?>

@@ -1,6 +1,6 @@
 <?php
 	global $wpdb, $user_ID;
-	$purchases= $wpdb->get_col("SELECT `id` FROM `".WPSC_TABLE_PURCHASE_LOGS."` WHERE user_ID = ".(int)$user_ID."") ;
+	$purchases= $wpdb->get_col("SELECT `id` FROM `".WPSC_TABLE_PURCHASE_LOGS."` WHERE user_ID = ".(int)$user_ID." AND user_ID !='0'") ;
 	$rowcount = count($purchases);
 	//echo "<pre>".print_r($purchases,true)."</pre>";
 	
@@ -38,9 +38,9 @@ if(count($files) > 0) {
     ?>
 		<table class='logdisplay'>
 			<tr>
-				<th><?php echo TXT_WPSC_FILE_NAMES; ?> </th>
-				<th><?php echo TXT_WPSC_DOWNLOADS_LEFT; ?> </th>
-				<th><?php echo TXT_WPSC_DATE; ?> </th>
+				<th><?php echo __('File Names', 'wpsc'); ?> </th>
+				<th><?php echo __('Downloads Left', 'wpsc'); ?> </th>
+				<th><?php echo __('Date', 'wpsc'); ?> </th>
 			</tr>
       <?php
         $i=0;
@@ -66,6 +66,9 @@ if(count($files) > 0) {
 		</table>
 	<?php
 } else {	
-	echo TXT_WPSC_NO_DOWNLOADABLES; 
-}
+	echo __('You have not purchased any downloadable products yet.', 'wpsc'); 
+}?>
+</div>
+<?php
+
 ?>

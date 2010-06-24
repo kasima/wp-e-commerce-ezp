@@ -10,15 +10,15 @@
 
 function wpsc_display_variations_page() {
 	$columns = array(
-		'title' => TXT_WPSC_NAME,
-		'edit' => TXT_WPSC_EDIT,
+		'title' => __('Name', 'wpsc'),
+		'edit' => __('Edit', 'wpsc'),
 	);
 	register_column_headers('display-variations-list', $columns);	
 	
 	?>
 	<script language='javascript' type='text/javascript'>
 		function conf() {
-			var check = confirm("<?php echo TXT_WPSC_SURETODELETEPRODUCT;?>");
+			var check = confirm("<?php echo __('Are you sure you want to delete this product?', 'wpsc');?>");
 			if(check) {
 				return true;
 			} else {
@@ -29,14 +29,14 @@ function wpsc_display_variations_page() {
 		<?php
 
 		?>
-	</script>
-	<noscript>
+	</script><noscript>
 	</noscript>
+	
 	<div class="wrap">
 		<?php// screen_icon(); ?>
-		<h2><?php echo wp_specialchars( TXT_WPSC_DISPLAYVARIATIONS ); ?> </h2>
+		<h2><?php echo wp_specialchars( __('Display Variations', 'wpsc') ); ?> </h2>
 		<p>	
-				<?php echo TXT_WPSC_DISPLAYVARIATIONSDESCRIPTION;?>
+				<?php echo __('A variation can be anything "optional" about a product. ie: Size, Color, etc <br />For example: if you are selling t-shirts you might setup a variation set called size with the values small, medium, large...', 'wpsc');?>
 		</p>
   
 		
@@ -108,7 +108,7 @@ function wpsc_admin_variation_group_list() {
 						<tr class="variation-edit" id="variation-<?php echo $product['id']?>">
 								<td class="variation-name"><?php echo htmlentities(stripslashes($variation['name']), ENT_QUOTES, 'UTF-8'); ?></td>
 								<td class="edit-variation">
-								<a href='<?php echo add_query_arg('variation_id', $variation['id']); ?>'><?php echo TXT_WPSC_EDIT; ?></a>
+								<a href='<?php echo add_query_arg('variation_id', $variation['id']); ?>'><?php echo __('Edit', 'wpsc'); ?></a>
 								</td>
 						</tr>
 					<?php
@@ -142,18 +142,18 @@ function wpsc_admin_variation_forms($variation_id =  null) {
   }
   if($variation_name != '') {
     ?>
-    <h3><?php echo TXT_WPSC_EDITVARIATION;?><span> (<a href="admin.php?page=wpsc-edit-variations">Add new Variation Set</a>)</span></h3>
+    <h3><?php echo __('Edit Variation Set', 'wpsc');?><span> (<a href="admin.php?page=wpsc-edit-variations">Add new Variation Set</a>)</span></h3>
     <?php
   } else {
     ?>
-    <h3><?php echo TXT_WPSC_ADDVARIATION;?></h3>
+    <h3><?php echo __('Add Variation Set', 'wpsc');?></h3>
     <?php 
   }
   ?>
   <table class='category_forms'>
     <tr>
       <td>
-        <?php echo TXT_WPSC_NAME;?>:
+        <?php echo __('Name', 'wpsc');?>:
       </td>
       <td>
         <input type='text'  class="text" name='name' value='<?php echo $variation_name; ?>' />
@@ -161,7 +161,7 @@ function wpsc_admin_variation_forms($variation_id =  null) {
     </tr>
     <tr>
       <td>
-        <?php echo TXT_WPSC_VARIATION_VALUES;?>:
+        <?php echo __('Variation Values', 'wpsc');?>:
       </td>
       <td>
 				<div id='variation_values'>
@@ -175,7 +175,7 @@ function wpsc_admin_variation_forms($variation_id =  null) {
 								<input type='hidden' class='variation_values_id' name='variation_values_id[]' value='<?php echo $variation_value['id']; ?>' />
 								<?php if($variation_value_count > 1): ?>
 									<a class='image_link delete_variation_value' href='#'>
-									  <img src='<?php echo WPSC_URL; ?>/images/trash.gif' alt='<?php echo TXT_WPSC_DELETE; ?>' title='<?php echo TXT_WPSC_DELETE; ?>' />
+									  <img src='<?php echo WPSC_URL; ?>/images/trash.gif' alt='<?php echo __('Delete', 'wpsc'); ?>' title='<?php echo __('Delete', 'wpsc'); ?>' />
 									</a>
 								<?php endif; ?>
 								</div>
@@ -188,7 +188,7 @@ function wpsc_admin_variation_forms($variation_id =  null) {
 								<div class='variation_value'>
 									<input type='text' class="text" name='new_variation_values[]' value='' />
 										<a class='image_link delete_variation_value' href='#'>
-											<img src='<?php echo WPSC_URL; ?>/images/trash.gif' alt='<?php echo TXT_WPSC_DELETE; ?>' title='<?php echo TXT_WPSC_DELETE; ?>' />
+											<img src='<?php echo WPSC_URL; ?>/images/trash.gif' alt='<?php echo __('Delete', 'wpsc'); ?>' title='<?php echo __('Delete', 'wpsc'); ?>' />
 										</a>
 								</div>
 								<?php 
@@ -209,13 +209,13 @@ function wpsc_admin_variation_forms($variation_id =  null) {
 				<?php if($variation_id > 0) { ?>
 					<input type='hidden' name='variation_id' value='<?php echo $variation_id; ?>' />
 					<input type='hidden' name='submit_action' value='edit' />
-					<input class='button' style='float:left;'  type='submit' name='submit' value='<?php echo TXT_WPSC_EDIT; ?>' />
-					<a class='button delete_button' href='<?php echo wp_nonce_url("admin.php?wpsc_admin_action=wpsc-delete-variation-set&amp;deleteid={$variation_id}", 'delete-variation'); ?>' onclick="return conf();" ><?php echo TXT_WPSC_DELETE; ?></a>
+					<input class='button-primary' style='float:left;'  type='submit' name='submit' value='<?php echo __('Update Variations', 'wpsc'); ?>' />
+					<a class='button delete_button' href='<?php echo wp_nonce_url("admin.php?wpsc_admin_action=wpsc-delete-variation-set&amp;deleteid={$variation_id}", 'delete-variation'); ?>' onclick="return conf();" ><?php echo __('Delete', 'wpsc'); ?></a>
 					
 					
 				<?php } else { ?>
 					<input type='hidden' name='submit_action' value='add' />
-					<input class='button'  type='submit' name='submit' value='<?php echo TXT_WPSC_ADD;?>' />
+					<input class='button-primary'  type='submit' name='submit' value='<?php echo __('Add', 'wpsc');?>' />
 				<?php } ?>
         
         

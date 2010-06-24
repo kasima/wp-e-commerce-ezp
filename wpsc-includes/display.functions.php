@@ -31,6 +31,8 @@ function wpsc_buy_now_button($product_id, $replaced_shortcode = false) {
 				wpsc_the_product();
 				$price =  calculate_product_price($wpsc_query->product['id'], $wpsc_query->first_variations); 
 				$shipping = $wpsc_query->product['pnp'];
+				if(wpsc_uses_shipping()){$handling = get_option('base_local_shipping');}else{$handling = $shipping;}
+
 				$output .= "<form onsubmit='log_paypal_buynow(this)' target='paypal' action='".get_option('paypal_multiple_url')."' method='post' />
 					<input type='hidden' name='business' value='".get_option('paypal_multiple_business')."' />
 					<input type='hidden' name='cmd' value='_xclick' />
@@ -39,10 +41,15 @@ function wpsc_buy_now_button($product_id, $replaced_shortcode = false) {
 					<input type='hidden' id='amount' name='amount' value='".($price+$pnp)."' />
 					<input type='hidden' id='unit' name='unit' value='".$price."' />
 					<input type='hidden' id='shipping' name='ship11' value='".$shipping."' />
-					<input type='hidden' name='handling' value='".get_option('base_local_shipping')."' />
-					<input type='hidden' name='currency_code' value='".get_option('paypal_curcode')."' />
-					<input type='hidden' name='undefined_quantity' value='0' />
-					<input type='image' name='submit' border='0' src='https://www.paypal.com/en_US/i/btn/btn_buynow_LG.gif' alt='PayPal - The safer, easier way to pay online' />
+					<input type='hidden' name='handling' value='".$handling."' />
+					<input type='hidden' name='currency_code' value='".get_option('paypal_curcode')."' />";
+				if(get_option('multi_add') == 1){
+					$output .="<label for='quantity'>".__('Quantity','wpsc')."</label>";
+					$output .="<input type='text' size='4' id='quantity' name='quantity' value='' /><br />";
+				}else{
+					$output .="<input type='hidden' name='undefined_quantity' value='0' />";
+				}
+					$output .="<input type='image' name='submit' border='0' src='https://www.paypal.com/en_US/i/btn/btn_buynow_LG.gif' alt='PayPal - The safer, easier way to pay online' />
 					<img alt='' border='0' width='1' height='1' src='https://www.paypal.com/en_US/i/scr/pixel.gif' />
 				</form>\n\r";
 			endwhile;
@@ -80,7 +87,7 @@ function wpsc_also_bought($product_id) {
   
   $also_bought = $wpdb->get_results("SELECT `".WPSC_TABLE_PRODUCT_LIST."`.* FROM `".WPSC_TABLE_ALSO_BOUGHT."`, `".WPSC_TABLE_PRODUCT_LIST."` WHERE `selected_product`='".$product_id."' AND `".WPSC_TABLE_ALSO_BOUGHT."`.`associated_product` = `".WPSC_TABLE_PRODUCT_LIST."`.`id` AND `".WPSC_TABLE_PRODUCT_LIST."`.`active` IN('1') AND `".WPSC_TABLE_PRODUCT_LIST."`.`publish` IN ('1')ORDER BY `".WPSC_TABLE_ALSO_BOUGHT."`.`quantity` DESC LIMIT $also_bought_limit",ARRAY_A);
   if(count($also_bought) > 0) {
-    $output = "<h2 class='prodtitles wpsc_also_bought' >".TXT_WPSC_ALSO_BOUGHT."</h2>";
+    $output = "<h2 class='prodtitles wpsc_also_bought' >".__('People who bought this item also bought', 'wpsc')."</h2>";
     $output .= "<div class='wpsc_also_bought'>";
     foreach((array)$also_bought as $also_bought_data) {
       $output .= "<div class='wpsc_also_bought_item' style='width: ".$element_widths."px;'>";
@@ -128,7 +135,7 @@ function fancy_notifications() {
     $output = "";
     $output .= "<div id='fancy_notification'>\n\r";
     $output .= "  <div id='loading_animation'>\n\r";
-    $output .= '<img id="fancy_notificationimage" title="Loading" alt="Loading" src="'.WPSC_URL.'/images/indicator.gif" />'.TXT_WPSC_UPDATING."...\n\r";
+    $output .= '<img id="fancy_notificationimage" title="Loading" alt="Loading" src="'.WPSC_URL.'/images/indicator.gif" />'.__('Updating', 'wpsc')."...\n\r";
     $output .= "  </div>\n\r";
     $output .= "  <div id='fancy_notification_content'>\n\r";
     $output .= "  </div>\n\r";
@@ -141,10 +148,10 @@ function fancy_notification_content($cart_messages) {
   global $wpdb;
   $siteurl = get_option('siteurl');
 	foreach((array)$cart_messages as $cart_message) {
-		$output .= "<span>".$cart_message."</span><br />";
+		$output .= "<span>".$cart_message."</span>";
 	}
-	$output .= "<a href='".get_option('shopping_cart_url')."' class='go_to_checkout'>".TXT_WPSC_GOTOCHECKOUT."</a>";
-	$output .= "<a href='#' onclick='jQuery(\"#fancy_notification\").css(\"display\", \"none\"); return false;' class='continue_shopping'>".TXT_WPSC_CONTINUE_SHOPPING."</a>";
+	$output .= "<a href='".get_option('shopping_cart_url')."' class='go_to_checkout'>".__('Go to Checkout', 'wpsc')."</a>";
+	$output .= "<a href='#' onclick='jQuery(\"#fancy_notification\").css(\"display\", \"none\"); return false;' class='continue_shopping'>".__('Continue Shopping', 'wpsc')."</a>";
   return $output;
 }
 
@@ -162,7 +169,7 @@ function wpsc_product_url($product_id, $category_id = null, $escape = true) {
   }
   
 
-  
+//  exit('<pre>'.print_r($wp_query, true).'</pre>');
   if((($wp_rewrite->rules != null) && ($wp_rewrite != null)) || (get_option('rewrite_rules') != null)) {
     $url_name = get_product_meta($product_id, 'url_name', true);
     $url_name = htmlentities(stripslashes($url_name), ENT_QUOTES, 'UTF-8');
@@ -232,7 +239,7 @@ function external_link($product_id) {
 	if (!stristr($link,'http://')) {
 		$link = 'http://'.$link;
 	}
-	$output .= "<input type='button' value='".TXT_WPSC_BUYNOW."' onclick='gotoexternallink(\"$link\")'>";
+	$output .= "<input type='button' value='".__('Buy Now', 'wpsc')."' onclick='gotoexternallink(\"$link\")'>";
 	return $output;
 }
 
@@ -245,9 +252,9 @@ function wpsc_odd_category_setup() {
   $output = '';
   if(($userdata->wp_capabilities['administrator'] ==1) || ($userdata->user_level >=9)) {
     if(get_option('wpsc_default_category') == 1) {
-			$output = "<p>".TXT_WPSC_USING_EXAMPLE_CATEGORY."</p>";
+			$output = "<p>".__('You are using the example product group as your default group and it has no products in it, you should set the default group to something else, you can do so from your Shop Settings page.', 'wpsc')."</p>";
 		} else {
-		  $output = "<p>".TXT_WPSC_ADMIN_EMPTY_CATEGORY."</p>";
+		  $output = "<p>".__('This group is set as your default product group, you should either add some items to it or switch your default product group to one that does contain items.', 'wpsc')."</p>";
 		}
   }
   return $output;
@@ -316,7 +323,7 @@ function wpsc_add_to_cart_button($product_id, $replaced_shortcode = false) {
 		if(isset($wpsc_theme) && is_array($wpsc_theme) && ($wpsc_theme['html'] !='')) {
 				$output .= $wpsc_theme['html'];
 		} else {
-			$output .= "<input type='submit' id='product_".$product['id']."_submit_button' class='wpsc_buy_button' name='Buy' value='".TXT_WPSC_ADDTOCART."'  />";
+			$output .= "<input type='submit' id='product_".$product['id']."_submit_button' class='wpsc_buy_button' name='Buy' value='".__('Add To Cart', 'wpsc')."'  />";
 		}
 		$output .= '</form>';
 		if($replaced_shortcode == true) {

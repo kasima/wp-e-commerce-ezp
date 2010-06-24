@@ -23,7 +23,11 @@ Modified to integrate with wp shopping cart
 // http://3spots.blogspot.com/2006/02/30-social-bookmarks-add-to-footer.html
 
 $social_sites = array(
-  'delicious' => array(
+	'facebook' => array(
+    'name' => 'Facebook'
+    , 'url' => 'http://www.facebook.com/share.php?u={url}'
+  )
+	,	'delicious' => array(
     'name' => 'del.icio.us'
     , 'url' => 'http://del.icio.us/post?url={url}&title={title}'
   )
@@ -107,6 +111,7 @@ $social_sites = array(
 // if (function_exists('load_plugin_textdomain')) {
 //   load_plugin_textdomain('alexking.org');
 // }
+
 
 $wpsc_akst_action = '';
 
@@ -427,7 +432,7 @@ function wpsc_akst_share_link($action = 'print') {
   ob_start();
  /*<?php bloginfo('siteurl'); ?>/?p=<?php print($post->ID); ?>&amp;wpsc_akst_action=share-this */
 ?>
-<a href="#" <?php print($onclick); ?> title="<?php _e('E-mail this, post to del.icio.us, etc.', 'alexking.org'); ?>" id="wpsc_akst_link_<?php print($post->ID); ?>" class="wpsc_akst_share_link" rel="nofollow"><img src='<?php echo WPSC_URL; ?>/images/social_networking/share-this-product.gif' title='Share This' alt='Share This' /></a>
+<a href="#" <?php print($onclick); ?> title="<?php _e('E-mail this, post to del.icio.us, etc.','wpsc'); ?>" id="wpsc_akst_link_<?php print($post->ID); ?>" class="wpsc_akst_share_link" rel="nofollow"><img src='<?php echo WPSC_URL; ?>/images/social_networking/share-this-product.gif' title='Share This' alt='Share This' /></a>
 <?php
   $link = ob_get_contents();
   ob_end_clean();
@@ -480,10 +485,10 @@ function wpsc_akst_share_form() {
 ?>
   <!-- Share This BEGIN -->
   <div id="wpsc_akst_form">
-    <a href="#" onclick="jQuery('#wpsc_akst_form').css('display','none'); return false;" class="wpsc_akst_close"><?php _e('Close', 'alexking.org'); ?></a>
+    <a href="#" onclick="jQuery('#wpsc_akst_form').css('display','none'); return false;" class="wpsc_akst_close"><?php _e('Close', 'wpsc'); ?></a>
     <ul class="tabs">
-      <li id="wpsc_akst_tab1" class="selected" onclick="wpsc_akst_share_tab('1');"><?php _e('Social Web', 'alexking.org'); ?></li>
-      <li id="wpsc_akst_tab2" onclick="wpsc_akst_share_tab('2');"><?php _e('E-mail', 'alexking.org'); ?></li>
+      <li id="wpsc_akst_tab1" class="selected" onclick="wpsc_akst_share_tab('1');"><?php _e('Social Web', 'wpsc'); ?></li>
+      <li id="wpsc_akst_tab2" onclick="wpsc_akst_share_tab('2');"><?php _e('E-mail', 'wpsc'); ?></li>
     </ul>
     <div class="clear"></div>
     <div id="wpsc_akst_social">
@@ -497,24 +502,25 @@ function wpsc_akst_share_form() {
       <div class="clear"></div>
     </div>
     <div id="wpsc_akst_email">
-      <form action="<?php bloginfo('wpurl'); ?>/index.php" method="post">
+      <form action="#" method="post">
+			<!-- "<?php echo WPSC_URL; ?>/share-this.php -->
         <fieldset>
-          <legend><?php _e('E-mail It', 'alexking.org'); ?></legend>
+          <legend><?php _e('E-mail It', 'wpsc'); ?></legend>
           <ul>
             <li>
-              <label><?php _e('To Address:', 'alexking.org'); ?></label>
+              <label><?php _e('To Address:','wpsc'); ?></label>
               <input type="text" name="wpsc_akst_to" value="" class="wpsc_akst_text" />
             </li>
             <li>
-              <label><?php _e('Your Name:', 'alexking.org'); ?></label>
+              <label><?php _e('Your Name:','wpsc'); ?></label>
               <input type="text" name="wpsc_akst_name" value="<?php print(htmlspecialchars($name)); ?>" class="wpsc_akst_text" />
             </li>
             <li>
-              <label><?php _e('Your Address:', 'alexking.org'); ?></label>
+              <label><?php _e('Your Address:','wpsc'); ?></label>
               <input type="text" name="wpsc_akst_email" value="<?php print(htmlspecialchars($email)); ?>" class="wpsc_akst_text" />
             </li>
             <li>
-              <input type="submit" name="wpsc_akst_submit" value="<?php _e('Send It', 'alexking.org'); ?>" />
+              <input type="submit" name="wpsc_akst_submit" value="<?php _e('Send It','wpsc'); ?>" />
             </li>
           </ul>
           <input type="hidden" name="wpsc_akst_action" value="send_mail" />
@@ -596,7 +602,7 @@ function wpsc_akst_send_mail() {
   }
 
   if (empty($to) || !ak_check_email_address($to) || empty($email) || !ak_check_email_address($email)) {
-    wp_die(__('Click your <strong>back button</strong> and make sure those e-mail addresses are valid then try again.', 'alexking.org'));
+    wp_die(__('Click your <strong>back button</strong> and make sure those e-mail addresses are valid then try again.', 'wpsc'));
   }
   
 //  $post = &get_post($post_id);
@@ -606,13 +612,13 @@ function wpsc_akst_send_mail() {
     .'Return-Path: "'.$name.'" <'.$email.'>'."\n"
     ."Content-Type: text/plain; charset=\"" . get_option('blog_charset') ."\"\n";
   
-  $subject = __('Check out this product on ', 'alexking.org').get_bloginfo('name');
+  $subject = __('Check out this product on ', 'wpsc').get_bloginfo('name');
   
   if(is_numeric($_REQUEST['wpsc_akst_product_id']))
     {
     $permalink = get_option('product_list_url');    
-    $message .= __('Greetings--', 'alexking.org')."\n\n";
-    $message .= $name.__(' thinks this will be of interest to you:', 'alexking.org')."\n\n";
+    $message .= __('Greetings--', 'wpsc')."\n\n";
+    $message .= $name.__(' thinks this will be of interest to you:','wpsc')."\n\n";
     //$message .= ak_decode_entities(get_the_title($post_id))."\n\n";
     if($wp_query->query_vars['product_url_name'] != '') {
 			$product_id = $wpdb->get_var("SELECT `product_id` FROM `".WPSC_TABLE_PRODUCTMETA."` WHERE `meta_key` IN ( 'url_name' ) AND `meta_value` IN ( '".$wp_query->query_vars['product_url_name']."' ) ORDER BY `product_id` DESC LIMIT 1");
@@ -625,17 +631,17 @@ function wpsc_akst_send_mail() {
 				$message .= wpsc_product_url((int)$_REQUEST['wpsc_akst_product_id'])."\n\n";
 			}
     }
-    $message .= __('Enjoy.', 'alexking.org')."\n\n";
+    $message .= __('Enjoy.')."\n\n";
     $message .= '--'."\n";
     $message .= get_bloginfo('home')."\n";
     }
     else
       {  
-      $message = __('Greetings--', 'alexking.org')."\n\n"
-        .$name.__(' thinks this will be of interest to you:', 'alexking.org')."\n\n"
+      $message = __('Greetings--','wpsc')."\n\n"
+        .$name.__(' thinks this will be of interest to you:','wpsc')."\n\n"
         .ak_decode_entities(get_the_title($post_id))."\n\n"
         .get_permalink($post_id)."\n\n"
-        .__('Enjoy.', 'alexking.org')."\n\n"
+        .__('Enjoy.')."\n\n"
         .'--'."\n"
         .get_bloginfo('home')."\n";
       }
@@ -693,7 +699,7 @@ function wpsc_akst_page() {
         "http://www.w3.org/TR/xhtml11/DTD/xhtml11.dtd">
 <html xmlns="http://www.w3.org/1999/xhtml">
 <head>
-  <title><?php _e('Share This : ', 'alexking.org'); the_title(); ?></title>
+  <title><?php _e('Share This : ', 'wpsc'); the_title(); ?></title>
   <meta name="robots" content="noindex, noarchive" />
   <link rel="stylesheet" type="text/css" href="<?php print(wpsc_akst_FILEPATH); ?>?wpsc_akst_action=css" />
   <style type="text/css">
@@ -829,11 +835,11 @@ function wpsc_akst_page() {
 <div id="body">
 
   <div id="info">
-    <p><?php printf(__('<strong>What is this?</strong> From this page you can use the <em>Social Web</em> links to save %s to a social bookmarking site, or the <em>E-mail</em> form to send a link via e-mail.', 'alexking.org'), '<a href="'.get_permalink($id).'">'.get_the_title().'</a>'); ?></p>
+    <p><?php printf(__('<strong>What is this?</strong> From this page you can use the <em>Social Web</em> links to save %s to a social bookmarking site, or the <em>E-mail</em> form to send a link via e-mail.', bloginfo('wpurl')), '<a href="'.get_permalink($id).'">'.get_the_title().'</a>'); ?></p>
   </div>
 
   <div id="social">
-    <h2><?php _e('Social Web', 'alexking.org'); ?></h2>
+    <h2><?php _e('Social Web', 'wpsc'); ?></h2>
     <div id="wpsc_akst_social">
       <ul>
 <?php
@@ -858,26 +864,26 @@ function wpsc_akst_page() {
   </div>
   
   <div id="email">
-    <h2><?php _e('E-mail', 'alexking.org'); ?></h2>
+    <h2><?php _e('E-mail', 'wpsc'); ?></h2>
     <div id="wpsc_akst_email">
-      <form action="<?php bloginfo('wpurl'); ?>/index.php" method="post">
+      <form action="#" method="post">
         <fieldset>
-          <legend><?php _e('E-mail It', 'alexking.org'); ?></legend>
+          <legend><?php _e('E-mail It','wpsc'); ?></legend>
           <ul>
             <li>
-              <label><?php _e('To Address:', 'alexking.org'); ?></label>
+              <label><?php _e('To Address:','wpsc'); ?></label>
               <input type="text" name="wpsc_akst_to" value="" class="wpsc_akst_text" />
             </li>
             <li>
-              <label><?php _e('Your Name:', 'alexking.org'); ?></label>
+              <label><?php _e('Your Name:','wpsc'); ?></label>
               <input type="text" name="wpsc_akst_name" value="<?php print(htmlspecialchars($name)); ?>" class="wpsc_akst_text" />
             </li>
             <li>
-              <label><?php _e('Your Address:', 'alexking.org'); ?></label>
+              <label><?php _e('Your Address:','wpsc'); ?></label>
               <input type="text" name="wpsc_akst_email" value="<?php print(htmlspecialchars($email)); ?>" class="wpsc_akst_text" />
             </li>
             <li>
-              <input type="submit" name="wpsc_akst_submit" value="<?php _e('Send It', 'alexking.org'); ?>" />
+              <input type="submit" name="wpsc_akst_submit" value="<?php _e('Send It','wpsc'); ?>" />
             </li>
           </ul>
           <input type="hidden" name="wpsc_akst_action" value="send_mail" />
@@ -900,17 +906,13 @@ function wpsc_akst_page() {
   <div id="content">
     <span class="wpsc_akst_date"><?php the_time('F d, Y'); ?></span>
     <h1 class="wpsc_akst_title"><?php the_title(); ?></h1>
-    <p class="wpsc_akst_category"><?php _e('Posted in: ', 'alexking.org'); the_category(','); ?></p>
+    <p class="wpsc_akst_category"><?php _e('Posted in: ', 'wpsc'); the_category(','); ?></p>
     <div class="wpsc_akst_entry"><?php the_content(); ?></div>
     <hr />
-    <p class="wpsc_akst_return"><?php _e('Return to:', 'alexking.org'); ?> <a href="<?php the_permalink(); ?>"><?php the_title(); ?></a></p>
+    <p class="wpsc_akst_return"><?php _e('Return to:', 'wpsc'); ?> <a href="<?php the_permalink(); ?>"><?php the_title(); ?></a></p>
     <div class="clear"></div>
   </div>
   
-  <div id="footer">
-    <p><?php _e('Powered by <a href="http://alexking.org/projects/wordpress">Share This</a>', 'alexking.org'); ?></p>
-  </div>
-
 </div>
 
 </body>

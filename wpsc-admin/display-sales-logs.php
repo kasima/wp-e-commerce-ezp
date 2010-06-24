@@ -7,11 +7,13 @@
  * @package wp-e-commerce
  * @since 3.7
  */
+
 if(!isset($purchlogs)){
 	$purchlogs = new wpsc_purchaselogs();	
 }
  function wpsc_display_sales_logs() {
 		$subpage = $_GET['subpage'];
+		//$wpdb->query($sql);
 		switch($subpage) {
 			case 'upgrade-purchase-logs':
 				wpsc_upgrade_purchase_logs();   
@@ -24,21 +26,18 @@ if(!isset($purchlogs)){
 	}
 
  function wpsc_display_sales_log_index() {
-   global $purchlogs;
   	?>
 	<div class="wrap">
 		<?php //screen_icon(); ?>
-		<h2><?php echo wp_specialchars( TXT_WPSC_PURCHASELOG ); ?> </h2>
+		<h2><?php echo wp_specialchars( __('Sales', 'wpsc') ); ?> </h2>
 		<?php //START OF PURCHASE LOG DEFAULT VIEW ?>
 		<?php
-
 		 if(isset($_GET['view_purchlogs_by']) || isset($_GET['view_purchlogs_by_status'])) {
 			wpsc_change_purchlog_view($_GET['view_purchlogs_by'], $_GET['view_purchlogs_by_status']);
-		}
-		
-			if(!isset($_REQUEST['purchaselog_id'])) {
-		  	$columns = array(
-		  		'cb' => '<input type="checkbox" />',
+			}
+			if(!isset($_REQUEST['purchaselog_id'])){
+				$columns = array(
+					'cb' => '<input type="checkbox" />',
 					'date' => 'Date',
 					'name' => '',
 					'amount' => 'Amount',
@@ -47,11 +46,18 @@ if(!isset($purchlogs)){
 					'delete' => 'Delete',
 					'track' => 'Track'
 				);
-				register_column_headers('display-sales-list', $columns);	
+				register_column_headers('display-sales-list', $columns);
 				///// start of update message section //////
 				
 				//$fixpage = get_option('siteurl').'/wp-admin/admin.php?page='.WPSC_FOLDER.'/wpsc-admin/purchlogs_upgrade.php';
-				
+				$current_user = wp_get_current_user();
+  
+			  // we put the closed postboxes array into the product data to propagate it to each form without having it global.
+			  $dashboard_data['closed_postboxes'] = (array)get_usermeta( $current_user->ID, 'closedpostboxes_store_page_wpscsalelogs');
+//			  exit('<pre>'.print_r($dashboard_data,true).'</pre>');
+//			  $dashboard_data['hidden_postboxes'] = (array)get_usermeta( $current_user->ID, 'metaboxhidden_store_page_wpsc-edit-products');
+			  
+
 				$fixpage = get_option('siteurl').'/wp-admin/admin.php?page=wpsc-sales-logs&amp;subpage=upgrade-purchase-logs';
 			if (isset($_GET['skipped']) || isset($_GET['updated']) || isset($_GET['deleted']) ||  isset($_GET['locked']) ) { ?>
 			<div id="message" class="updated fade"><p>
@@ -82,11 +88,16 @@ if(!isset($purchlogs)){
 				<div class='error' style='padding:8px;line-spacing:8px;'><span ><?php _e('When upgrading the Wp-E-Commerce Plugin from 3.6.* to 3.7 it is required that you associate your checkout form fields with the new Purchase Logs system. To do so please '); ?> <a href='<?php echo $fixpage; ?>'>Click Here</a></span></div>
 	<?php	 } 
 		///// end of update message section //////?>
+		
+		
+		
 		<div id='dashboard-widgets' style='min-width: 825px;'>
 			<!--
  <div class='inner-sidebar'> 
 					<div class='meta-box-sortables'>			
 						<?php
+							
+				
 							//if(IS_WP27){
 							//	display_ecomm_rss_feed();
 							//}
@@ -97,12 +108,32 @@ if(!isset($purchlogs)){
 			<?php /* end of sidebar start of main column */ ?>
 			<div id='post-body' class='has-sidebar metabox-holder' style='width:95%;'>
 				<div id='dashboard-widgets-main-content-wpsc' class='has-sidebar-content'>
-			
-				<?php 
-					if(function_exists('wpsc_right_now')) {
-						echo wpsc_right_now();
+					<?php if(function_exists('fetch_feed')){ ?>
+					<div class='postbox <?php  echo ((array_search('wpsc_getshopped_news', $dashboard_data['closed_postboxes']) !== false) ? 'closed' : ''); ?>' id="wpsc_getshopped_news">	 
+						<h3 class='hndle'>
+							<span><?php _e('GetShopped News', 'wpsc'); ?></span>
+							<br class='clear'/>
+						</h3>
+		
+						<div class='inside'>
+							<?php 
+							//			exit('Data:<pre>'.print_r($dashboard_data,true).'</pre>');
+							$rss = fetch_feed('http://getshopped.org/category/wp-e-commerce-plugin/'); 
+							$args = array('show_author' => 1, 'show_date' => 1, 'show_summary' => 1, 'items'=>3 );
+							wp_widget_rss_output($rss, $args); 
+							?>
+						</div>
+					</div>
+					<?php
 					}
-			   	
+				//	add_meta_box("wpsc_getshopped_news", __('GetShopped News', 'wpsc'), "wpsc_getshopped_news_meta_box", "wpsc");
+				//	do_meta_boxes('wpsc','advanced',null);
+			
+
+					if(function_exists('wpsc_right_now')) {
+						echo wpsc_right_now($dashboard_data['closed_postboxes'] );
+					}
+					wp_nonce_field( 'closedpostboxes', 'closedpostboxesnonce', false );   	
 			   		?> 
 			   	</div><br />
 			   	<div id='wpsc_purchlog_searchbox'>
@@ -133,13 +164,19 @@ if(!isset($purchlogs)){
 			
 			<?php
 		$page_back = remove_query_arg( array('locked', 'skipped', 'updated', 'deleted','purchaselog_id'), $_SERVER['REQUEST_URI'] );
+		 if(wpsc_tax_isincluded() == false){
+		 	$taxlabel = 'Tax';
+		 }else{
+		 	$taxlabel = 'Tax Included';
+		 }
 
 		$columns = array(
 	  	'title' => 'Name',
 			'sku' => 'SKU',
 			'quantity' => 'Quantity',
 			'price' => 'Price',
-			'tax' => 'Tax',
+			'shipping' => 'Shipping',
+			'tax' => $taxlabel,
 // 			'discount' => 'Discount',
 			'total' => 'Total'
 		);
@@ -204,8 +241,8 @@ if(!isset($purchlogs)){
 						<?php wpsc_display_purchlog_details(); ?>
 						<tr> &nbsp;</tr>
 
-						<tr>
-							<td colspan="4">
+						<tr class="wpsc_purchaselog_start_totals">
+							<td colspan="5">
 								<?php if ( wpsc_purchlog_has_discount_data() ) { ?>
 								<?php _e('Coupon Code'); ?>: <?php echo wpsc_display_purchlog_discount_data(); ?>
 								<?php } ?>
@@ -215,12 +252,12 @@ if(!isset($purchlogs)){
 						</tr>
 						
 						<tr>
-							<td colspan='4'></td>
+							<td colspan='5'></td>
 							<th><?php _e('Shipping'); ?> </th>
 							<td><?php echo wpsc_display_purchlog_shipping(); ?></td>
 						</tr>
 						<tr>
-							<td colspan='4'></td>
+							<td colspan='5'></td>
 							<th><?php _e('Total'); ?> </th>
 							<td><?php echo wpsc_display_purchlog_totalprice(); ?></td>
 						</tr>
@@ -249,16 +286,17 @@ if(!isset($purchlogs)){
 				
 				<div id='wpsc_purchlogitems_links'>
 				<h3><?php _e('Actions'); ?></h3>
+				<?php do_action( 'wpsc_purchlogitem_links_start' ); ?>
 				<?php if(wpsc_purchlogs_have_downloads_locked() != false): ?>
 <img src='<?php echo WPSC_URL; ?>/images/lock_open.png' alt='clear lock icon' />&ensp;<a href='<?php echo $_SERVER['REQUEST_URI'].'&amp;wpsc_admin_action=clear_locks'; ?>'><?php echo wpsc_purchlogs_have_downloads_locked(); ?></a><br /><br class='small' />
 				<?php endif; ?>
-<img src='<?php echo WPSC_URL; ?>/images/printer.png' alt='printer icon' />&ensp;<a href='<?php echo add_query_arg('wpsc_admin_action','wpsc_display_invoice'); ?>'><?php echo TXT_WPSC_VIEW_PACKING_SLIP; ?></a>
+<img src='<?php echo WPSC_URL; ?>/images/printer.png' alt='printer icon' />&ensp;<a href='<?php echo add_query_arg('wpsc_admin_action','wpsc_display_invoice'); ?>'><?php echo __('View Packing Slip', 'wpsc'); ?></a>
 		
-<br /><br class='small' /><img src='<?php echo WPSC_URL; ?>/images/email_go.png' alt='email icon' />&ensp;<a href='<?php echo add_query_arg('email_buyer_id',$_GET['purchaselog_id']); ?>'><?php echo TXT_WPSC_EMAIL_BUYER; ?></a>
+<br /><br class='small' /><img src='<?php echo WPSC_URL; ?>/images/email_go.png' alt='email icon' />&ensp;<a href='<?php echo add_query_arg('email_buyer_id',$_GET['purchaselog_id']); ?>'><?php echo __('Resend Receipt to Buyer', 'wpsc'); ?></a>
 		  
-<br /><br class='small' /><a class='submitdelete' title='<?php echo attribute_escape(__('Delete this log')); ?>' href='<?php echo wp_nonce_url("page.php?wpsc_admin_action=delete_purchlog&amp;purchlog_id=".$_GET['purchaselog_id'], 'delete_purchlog_' .$_GET['purchaselog_id']); ?>' onclick="if ( confirm(' <?php echo js_escape(sprintf( __("You are about to delete this log '%s'\n 'Cancel' to stop, 'OK' to delete."),  wpsc_purchaselog_details_date() )) ?>') ) { return true;}return false;"><img src='<?php echo WPSC_URL."/images/cross.png"; ?>' alt='delete icon' />               &nbsp;<?php echo TXT_WPSC_REMOVE_LOG ?></a>
+<br /><br class='small' /><a class='submitdelete' title='<?php echo attribute_escape(__('Delete this log')); ?>' href='<?php echo wp_nonce_url("page.php?wpsc_admin_action=delete_purchlog&amp;purchlog_id=".$_GET['purchaselog_id'], 'delete_purchlog_' .$_GET['purchaselog_id']); ?>' onclick="if ( confirm(' <?php echo js_escape(sprintf( __("You are about to delete this log '%s'\n 'Cancel' to stop, 'OK' to delete."),  wpsc_purchaselog_details_date() )) ?>') ) { return true;}return false;"><img src='<?php echo WPSC_URL."/images/cross.png"; ?>' alt='delete icon' />               &nbsp;<?php echo __('Remove this record', 'wpsc') ?></a>
 
-<br /><br class='small' />&emsp;&ensp; 	<a href='<?php echo $page_back ?>'><?php echo TXT_WPSC_GOBACK; ?></a>
+<br /><br class='small' />&emsp;&ensp; 	<a href='<?php echo $page_back ?>'><?php echo __('Go Back', 'wpsc'); ?></a>
 <br /><br />
 			</div>
 			</div>
@@ -273,11 +311,11 @@ if(!isset($purchlogs)){
  	?>	
  	<div class="meta-box-sortables ui-sortable" style="position: relative;"> 
  		<div class='postbox'> 
-			<h3 class='hndle'><?php echo TXT_WPSC_MENU; ?></h3>
+			<h3 class='hndle'><?php echo __('e-Commerce Admin Menu', 'wpsc'); ?></h3>
 			<div class='inside'>
-				<a href='admin.php?page=wpsc-settings'><?php echo TXT_WPSC_SHOP_SETTINGS; ?></a><br />
-				<a href='admin.php?page=wpsc-settings&amp;tab=gateway'><?php echo TXT_WPSC_CHECKOUT_SETTINGS; ?></a><br />
-				<a href='admin.php?page=wpsc-settings&amp;tab=checkout'><?php echo TXT_WPSC_CHECKOUT_SETTINGS; ?></a><br />
+				<a href='admin.php?page=wpsc-settings'><?php echo __('Shop Settings', 'wpsc'); ?></a><br />
+				<a href='admin.php?page=wpsc-settings&amp;tab=gateway'><?php echo __('Checkout Settings', 'wpsc'); ?></a><br />
+				<a href='admin.php?page=wpsc-settings&amp;tab=checkout'><?php echo __('Checkout Settings', 'wpsc'); ?></a><br />
 			</div>
 		</div>		
 	</div>
@@ -292,7 +330,7 @@ if(!isset($purchlogs)){
 			if((string)get_option('wpsc_ecom_news_hash') !== (string)$current_hash ) {
 				?>
 				<div class='postbox'> 
-					<h3 class='hndle'><?php echo TXT_WPSC_ECOM_NEWS; ?></h3>
+					<h3 class='hndle'><?php echo __('WP e-Commerce News', 'wpsc'); ?></h3>
 					<div class='inside'>
 					<ul class='ecom_dashboard'>
 					<?php
@@ -314,11 +352,11 @@ if(!isset($purchlogs)){
     function wpsc_ordersummary(){
     ?>
     	<div class='postbox'> 
-    	<h3 class='hndle'><?php echo TXT_WPSC_ORDER_SUMMARY; ?></h3>
+    	<h3 class='hndle'><?php echo __('Order Summary', 'wpsc'); ?></h3>
     
    		 <div class='inside'> 
       <div class='order_summary_subsection'>
-      <strong><?php echo TXT_WPSC_TOTAL_THIS_MONTH; ?></strong>
+      <strong><?php echo __('Last 30 Days', 'wpsc'); ?></strong>
       <p id='log_total_month'>
       <?php 
       $year = date("Y");
@@ -326,12 +364,12 @@ if(!isset($purchlogs)){
       $start_timestamp = mktime(0, 0, 0, $month, 1, $year);
       $end_timestamp = mktime(0, 0, 0, ($month+1), 0, $year);
       echo nzshpcrt_currency_display(admin_display_total_price($start_timestamp, $end_timestamp),1);
-      echo " ".TXT_WPSC_ACCEPTED_PAYMENTS;
+      echo " ".__('(accepted payments)', 'wpsc');
       ?>
       </p>
       </div>
       <div class='order_summary_subsection'>
-      <strong><?php echo TXT_WPSC_TOTAL_INCOME; ?></strong>
+      <strong><?php echo __('Life Time', 'wpsc'); ?></strong>
       <p id='log_total_absolute'>
       <?php
        //$total_income = $wpdb->get_results($sql,ARRAY_A);
@@ -341,15 +379,15 @@ if(!isset($purchlogs)){
       </div> 
      
       <div class='order_summary_subsection'>
-      <strong><?php echo TXT_WPSC_RSS_FEED_HEADER; ?></strong>
+      <strong><?php echo __('Subscribe to your orders', 'wpsc'); ?></strong>
       <p>
-        <a class='product_log_rss' href='index.php?rss=true&amp;rss_key=key&amp;action=purchase_log'><img align='middle' src='<?php echo WPSC_URL; ?>/images/rss-icon.jpg' alt='' title='' />&nbsp;<span><?php echo TXT_WPSC_RSS_FEED_LINK; ?></span></a> <?php echo TXT_WPSC_RSS_FEED_TEXT; ?>      </p>
+        <a class='product_log_rss' href='index.php?rss=true&amp;rss_key=key&amp;action=purchase_log'><img align='middle' src='<?php echo WPSC_URL; ?>/images/rss-icon.jpg' alt='' title='' />&nbsp;<span><?php echo __('Subscribe to an RSS feed', 'wpsc'); ?></span></a> <?php echo __('of your orders', 'wpsc'); ?>      </p>
       </div>
          <div class='order_summary_subsection'>
-      <strong><?php echo TXT_WPSC_PLUGIN_NEWS_HEADER; ?></strong>
+      <strong><?php echo __('Plugin News', 'wpsc'); ?></strong>
       <p>
-      <?php echo TXT_WPSC_PLUGIN_NEWS; ?>        
-        <br /><br /><?php echo TXT_WPSC_POWERED_BY; ?><a href='http://www.instinct.co.nz'>Instinct</a>
+      <?php echo __('The <a href="http://instinct.co.nz/blogshop/products-page/" target="_blank">WP DropShop Module</a> is the latest and most cutting edge shopping cart available online. Coupled with Grid View then your site will be the talk of street! <br/><br/>The <a href="http://instinct.co.nz/blogshop/products-page/" target="_blank">GridView Module</a> is a visual module built to enhance the way your product page looks.<br/><br/><a href="http://www.instinct.co.nz/wp-campaign-monitor/100">WP Campaign Monitor</a> is an email newsletter tool built just for WP users who want to send campaigns, track the results and manage their subscribers. The latest version integrates with e-commerce lite meaning that you will be able to send buyers email newsletters and much more. ', 'wpsc'); ?>        
+        <br /><br /><?php echo __('This shop is powered by ', 'wpsc'); ?><a href='http://www.instinct.co.nz'>Instinct</a>
       </p>
       </div>
     </div>
@@ -358,7 +396,7 @@ if(!isset($purchlogs)){
       ?>
       <div class='gold-cart_pesterer'> 
         <div>
-        <img src='<?php echo WPSC_URL; ?>/images/gold-cart.png' alt='' title='' /><a href='http://www.instinct.co.nz/e-commerce/shop/'><?php echo TXT_WPSC_UPGRADE_TO_GOLD; ?></a><?php echo TXT_WPSC_UNLEASH_MORE; ?>
+        <img src='<?php echo WPSC_URL; ?>/images/gold-cart.png' alt='' title='' /><a href='http://www.instinct.co.nz/e-commerce/shop/'><?php echo __('Upgrade to Gold', 'wpsc'); ?></a><?php echo __(' and unleash more functionality into your shop.', 'wpsc'); ?>
         </div>
       </div>
       
@@ -390,7 +428,6 @@ if(!isset($purchlogs)){
   		<input type="submit" value="<?php _e('Apply'); ?>" name="doaction" id="doaction" class="button-secondary action" />
   		<?php /* View functions for purchlogs */?>
   		<label for='view_purchlogs_by'><?php _e('View:'); ?></label>
-
   		<select id='view_purchlogs_by' name='view_purchlogs_by'>
   		  <?php
 				$date_is_selected['3mnths'] = '';
@@ -400,8 +437,8 @@ if(!isset($purchlogs)){
 						$date_is_selected['3mnths'] = 'selected="selected"';
 					break;
 					
-					case '':
 					case 'all':
+					
 						$date_is_selected['all'] = 'selected="selected"';
 					break;
   		  }
@@ -463,7 +500,7 @@ if(!isset($purchlogs)){
 								 'end_timestamp'	=> $purchlogs->current_end_timestamp);
 		?>	
 		<br />	
-		<p><a class='admin_download' href='<?php echo htmlentities(add_query_arg($arr_params)) ; ?>' ><img class='wpsc_pushdown_img' src='<?php echo WPSC_URL; ?>/images/download.gif' alt='' title='' /> <span> <?php echo TXT_WPSC_DOWNLOAD_CSV; ?></span></a></p>
+		<p><a class='admin_download' href='<?php echo htmlentities(add_query_arg($arr_params)) ; ?>' ><img class='wpsc_pushdown_img' src='<?php echo WPSC_URL; ?>/images/download.gif' alt='' title='' /> <span> <?php echo __('Download CSV', 'wpsc'); ?></span></a></p>
 	</form>
 	<br />
 	<script type="text/javascript">
@@ -494,7 +531,10 @@ if(!isset($purchlogs)){
  		<th class="check-column" scope="row"><input type='checkbox' name='purchlogids[]' class='editcheckbox' value='<?php echo wpsc_the_purch_item_id(); ?>' /></th>
  		<td><?php echo wpsc_the_purch_item_date(); ?></td> <!--Date -->
  		<td><?php echo wpsc_the_purch_item_name(); ?></td> <!--Name/email -->
- 		<td><?php echo nzshpcrt_currency_display(wpsc_the_purch_item_price(), true); ?></td><!-- Amount -->
+ 		<td><?php echo nzshpcrt_currency_display(wpsc_the_purch_item_price(), true); 
+ 		do_action('wpsc_additional_sales_amount_info',wpsc_the_purch_item_id());
+ 		?>
+</td><!-- Amount -->
  		<td><a href='<?php echo htmlentities(add_query_arg('purchaselog_id', wpsc_the_purch_item_id())) ; ?>'><?php echo wpsc_the_purch_item_details();?> Items</a></td><!-- Details -->
  		<td>
  		<?php if(wpsc_purchlogs_is_google_checkout() == false){ ?>
@@ -544,13 +584,14 @@ if(!isset($purchlogs)){
  	while(wpsc_have_purchaselog_details()) : wpsc_the_purchaselog_item();
  	?>
  	<tr>
- 	<td><?php echo wpsc_purchaselog_details_name(); ?></td> <!-- NAME -->
- 	<td><?php echo wpsc_purchaselog_details_SKU(); ?></td> <!-- SKU -->
- 	<td><?php echo wpsc_purchaselog_details_quantity(); ?></td> <!-- QUANTITY-->
- 	<td><?php echo nzshpcrt_currency_display(wpsc_purchaselog_details_price(),true); ?></td> <!-- PRICE -->
- 	<td><?php echo nzshpcrt_currency_display(wpsc_purchaselog_details_tax(),true); ?></td> <!-- TAX -->
- 	<?php /* <td><?php echo nzshpcrt_currency_display(wpsc_purchaselog_details_discount(),true); ?></td> <!-- DISCOUNT --> */ ?>
- 	<td><?php echo nzshpcrt_currency_display(wpsc_purchaselog_details_total(),true); ?></td> <!-- TOTAL -->
+ 	<td><?php echo wpsc_purchaselog_details_name(); ?></td> <!-- NAME! -->
+ 	<td><?php echo wpsc_purchaselog_details_SKU(); ?></td> <!-- SKU! -->
+ 	<td><?php echo wpsc_purchaselog_details_quantity(); ?></td> <!-- QUANTITY! -->
+ 	<td><?php echo nzshpcrt_currency_display(wpsc_purchaselog_details_price(),true); ?></td> <!-- PRICE! -->
+ 	<td><?php echo nzshpcrt_currency_display(wpsc_purchaselog_details_shipping(),true); ?></td> <!-- SHIPPING! -->
+ 	<td><?php echo wpsc_purchaselog_details_tax(); ?></td> <!-- TAX! -->
+ 	<?php /* <td><?php echo nzshpcrt_currency_display(wpsc_purchaselog_details_discount(),true); ?></td> <!-- DISCOUNT! --> */ ?>
+ 	<td><?php echo nzshpcrt_currency_display(wpsc_purchaselog_details_total(),true); ?></td> <!-- TOTAL! -->
  	</tr>
  	<?php
  	endwhile;
@@ -613,19 +654,27 @@ function wpsc_custom_checkout_fields(){
 	if(!empty($purchlogitem->customcheckoutfields)){
 	?>
 		<div class="metabox-holder">
-		<div id="custom_checkout_fields" class="postbox">
-		<h3 class='hndle'>Additional Checkout Fields</h3>
-		<div class='inside'>
-		<?php
-		foreach((array)$purchlogitem->customcheckoutfields as $key=>$value){
-		?>
-		<p><strong><?php echo $key; ?> :</strong> <?php echo $value['value']; ?></p>
-		<?php
-		
-		}
-		?>
-		</div>
-		</div>
+			<div id="custom_checkout_fields" class="postbox">
+				<h3 class='hndle'>Additional Checkout Fields</h3>
+				<div class='inside'>
+				<?php
+				foreach((array)$purchlogitem->customcheckoutfields as $key=>$value){
+					$value['value'] = maybe_unserialize($value['value']);	
+					if(is_array($value['value'])){
+						?>
+						<p><strong><?php echo $key; ?> :</strong> <?php echo implode($value['value'], ','); ?></p>
+						<?php
+						
+												
+					}else{
+						?>
+						<p><strong><?php echo $key; ?> :</strong> <?php echo $value['value']; ?></p>
+						<?php
+					}
+				}
+				?>
+				</div>
+			</div>
 		</div>
 		<?php
 	}

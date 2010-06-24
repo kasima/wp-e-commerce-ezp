@@ -85,7 +85,7 @@ $ack = strtoupper($resArray["ACK"]);
 }
 function paypal_certified_currencyconverter(){
 	global $wpdb;
-	$currency_code = $wpdb->get_results("SELECT `code` FROM `".WPSC_TABLE_CURRENCY_LIST."` WHERE `id`='".absint(get_option('currency_type'))."' LIMIT 1",ARRAY_A);
+	$currency_code = $wpdb->get_results("SELECT `code` FROM `".WPSC_TABLE_CURRENCY_LIST."` WHERE `id`='".get_option('currency_type')."' LIMIT 1",ARRAY_A);
 	$local_currency_code = $currency_code[0]['code'];
 	$paypal_currency_code = get_option('paypal_curcode');
 	if($paypal_currency_code == '') {
@@ -240,6 +240,7 @@ $_SESSION['paypalExpressMessage']= '
  	if($ack!="SUCCESS"){
  		$_SESSION['reshash']=$resArray;
  		$location = get_option('transact_url')."&act=error";
+		$_SESSION['paypalExpressMessage'] = 'Completed';
  			// header("Location: $location");
  	}else{
 		$transaction_id = $wpdb->escape($resArray['TRANSACTIONID']);
@@ -254,9 +255,10 @@ $_SESSION['paypalExpressMessage']= '
 			$wpdb->query("UPDATE `".WPSC_TABLE_PURCHASE_LOGS."` SET `transactid` = '".$transaction_id."', `date` = '".time()."'  WHERE `sessionid` = ".$sessionid." LIMIT 1");
 			break;
 		}
+		$_SESSION['paypalExpressMessage'] = $resArray['PAYMENTSTATUS'];
 		$location = add_query_arg('sessionid', $sessionid, get_option('transact_url'));
 		//echo $location;
-		$_SESSION['paypalExpressMessage'] = null;
+
 		header("Location: $location");
 		exit();
  	}
@@ -780,7 +782,7 @@ $output .= "
 	}
 
 	$USE_PROXY = false;
-	$version="56.0";
+	$version="57.0";
 
 	if (session_id() == "")
 		session_start();
@@ -838,7 +840,8 @@ $output .= "
 				$data['SHIPTOCITY']	= $value['value'];
 			}
 			if(($value['unique_name']=='billingcountry') && $value['value'] != ''){
-				$data['SHIPTOCOUNTRYCODE']	= $value['value'];
+				$values = maybe_unserialize($value['value']);
+				$data['SHIPTOCOUNTRYCODE']	= $values[0];
 				$state =  $wpdb->get_var("SELECT `code` FROM `".WPSC_TABLE_REGION_TAX."` WHERE `id` ='{$purchase_log['billing_region']}' LIMIT 1");
 				if($purchase_log['billing_region'] > 0) {
 					$data['SHIPTOSTATE'] = $state;
@@ -1040,7 +1043,7 @@ $output .= "
 		global $USE_PROXY, $PROXY_HOST, $PROXY_PORT;
 		global $gv_ApiErrorURL;
 		global $sBNCode;
-
+		$version = 57;
 		//setting the curl parameters.
 		$ch = curl_init();
 
@@ -1061,7 +1064,7 @@ $output .= "
 
 		//NVPRequest for submitting to server
 		$nvpreq="METHOD=" . urlencode($methodName) . "&VERSION=" . urlencode($version) . "&PWD=" . urlencode($API_Password) . "&USER=" . urlencode($API_UserName) . "&SIGNATURE=" . urlencode($API_Signature) . $nvpStr . "&BUTTONSOURCE=" . urlencode($sBNCode);
-
+		//exit('<pre>'.print_r($nvpreq,true).'</true>');
 		//setting the nvpreq as POST FIELD to curl
 		curl_setopt($ch, CURLOPT_POSTFIELDS, $nvpreq);
 		//exit($nvpreq);
