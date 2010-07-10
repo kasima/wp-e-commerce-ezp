@@ -133,7 +133,7 @@ function _buildImages($cartItems) {
 
 function _buildCustomer($customerData) {
   if ($customerData != null) {
-    $countryCode = _twoToThreeLetterCountryCode($customerData['billingcountry']);
+    $countryCode = _twoToThreeLetterCountryCode(_unserializeCountryCode($customerData['billingcountry']));
     return "<customer>
         <firstname>{$customerData['billingfirstname']}</firstname>
         <lastname>{$customerData['billinglastname']}</lastname>
@@ -148,6 +148,12 @@ function _buildCustomer($customerData) {
   else {
     return '';
   }
+}
+
+function _unserializeCountryCode($data) {
+  $code = maybe_unserialize($data);
+  $code = $code[0];
+  return $code;
 }
 
 function _twoToThreeLetterCountryCode($two_code) {
@@ -192,7 +198,7 @@ function _buildShippingAddress($customerData) {
       //     <zip>20902</zip>
       //     <countrycode>THA</countrycode>
       // </shippingaddress>';
-      $country = $customerData['billingcountry'];
+      $country = _unserializeCountryCode($customerData['billingcountry']);
       $countryCode = _twoToThreeLetterCountryCode($country);
       return "<shippingaddress>
           <firstname>{$customerData['shippingfirstname']}</firstname>
